@@ -52,7 +52,7 @@
   }
   .receipt::before{ top:-9px; }
   .receipt::after{ bottom:-9px; transform:rotate(180deg); }
-
+ 
   header{ text-align:center; margin-bottom:14px; }
   .logo{
     width:92px;
@@ -94,9 +94,9 @@
   }
   .month-row button:active{ background:var(--line); }
   .month-label{ font-variant-numeric:tabular-nums; font-weight:600; min-width:120px; text-align:center;}
-
+ 
   .dashed{ border-top:1px dashed var(--line); margin:16px 0; }
-
+ 
   /* ---- cards (dashboard) ---- */
   .card{
     background:#fff;
@@ -120,7 +120,7 @@
     margin-top:8px;
   }
   .progress > div{ height:100%; border-radius:5px; }
-
+ 
   .quick-actions{ display:flex; gap:10px; margin:4px 0 14px; }
   .quick-actions button{
     flex:1;
@@ -134,9 +134,9 @@
     cursor:pointer;
   }
   .quick-actions button:active{ opacity:.85; }
-
+ 
   .section-title{ font-weight:700; font-size:14px; margin:6px 0 8px; }
-
+ 
   .tx-row{
     display:flex;
     align-items:center;
@@ -151,16 +151,16 @@
   .tx-title{ font-weight:600; }
   .tx-sub{ color:var(--ink-soft); font-size:11px; }
   .tx-amount{ font-family:'Courier New',monospace; font-weight:700; white-space:nowrap; }
-
+ 
   .empty-hint{ font-size:12px; color:var(--ink-soft); padding:4px 0 10px; }
-
+ 
   /* ---- category / items (shopping) ---- */
   .category{ margin-bottom:18px; }
   .cat-head{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
   .dot{ width:10px; height:10px; border-radius:50%; flex:none; }
   .cat-name{ font-weight:700; font-size:15px; }
   .cat-total{ margin-inline-start:auto; font-family:'Courier New',monospace; font-size:13px; color:var(--ink-soft); }
-
+ 
   .sub-head{
     font-size:12px;
     font-weight:700;
@@ -169,7 +169,7 @@
     padding-inline-start:2px;
     border-bottom:1px dotted var(--line);
   }
-
+ 
   .item{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:7px 0; font-size:14px; }
   .item.bought .item-name{ text-decoration:line-through; color:var(--ink-soft); }
   .chk{
@@ -210,7 +210,7 @@
     background:#fff;
   }
   .item-calc-row .eq-total{ margin-inline-start:auto; font-weight:700; }
-
+ 
   .add-row{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
   .add-row input, .add-row select{
     border:1px solid var(--line);
@@ -230,21 +230,21 @@
     padding:0 12px; font-size:14px; cursor:pointer;
   }
   .add-row button:active{ opacity:.8; }
-
+ 
   footer{ margin-top:6px; }
   .sum-row{ display:flex; justify-content:space-between; font-size:14px; padding:4px 0; }
   .sum-row.total{ font-weight:700; font-size:16px; padding-top:8px; border-top:1px dashed var(--line); margin-top:6px; }
   .sum-val{ font-family:'Courier New',monospace; }
   .sum-val.good{ color:var(--good); }
   .sum-val.bad{ color:var(--bad); }
-
+ 
   .foot-note{ text-align:center; font-size:11px; color:var(--ink-soft); margin-top:16px; letter-spacing:.5px; }
   .reset-link{
     display:block; text-align:center; margin-top:10px; font-size:12px;
     color:var(--ink-soft); text-decoration:underline; cursor:pointer;
     background:none; border:none; font-family:inherit;
   }
-
+ 
   /* ---- expense form ---- */
   .exp-form{
     display:grid;
@@ -281,7 +281,7 @@
     color:var(--ink-soft);
   }
   .period-tabs button.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
-
+ 
   .banner{
     border-radius:10px;
     padding:10px 12px;
@@ -291,7 +291,7 @@
   }
   .banner.warn{ background:#FBF0D9; color:#7A5A0E; }
   .banner.bad{ background:#F7DEDA; color:#7A2E22; }
-
+ 
   .alloc-row{
     display:flex;
     align-items:center;
@@ -348,7 +348,7 @@
   .alloc-add-row button{
     border:none; background:var(--ink); color:var(--paper); border-radius:6px; padding:0 12px; font-size:13px; cursor:pointer;
   }
-
+ 
   .name-card{ display:flex; align-items:center; gap:8px; }
   .name-card input{
     flex:1; border:1px solid var(--line); border-radius:6px; padding:7px 8px; font-size:13px; font-family:inherit;
@@ -405,7 +405,7 @@
   .badge.pending{ background:#FBF0D9; color:#7A5A0E; }
   .badge.claimed{ background:#DCE7F5; color:#2E4E7A; }
   .badge.done{ background:#E3EEE0; color:#3F6B3F; }
-
+ 
   .toast{
     position:fixed;
     bottom:88px;
@@ -425,7 +425,7 @@
     box-shadow:0 6px 16px rgba(0,0,0,.25);
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
-
+ 
   .copy-box{
     width:100%;
     min-height:110px;
@@ -437,7 +437,7 @@
     font-size:12px;
     direction:rtl;
   }
-
+ 
   .login-wrap{
     min-height:100vh;
     display:flex;
@@ -494,7 +494,7 @@
     padding:8px;
     z-index:100;
   }
-
+ 
   /* ---- bottom nav ---- */
   .bottom-nav{
     position:fixed;
@@ -534,7 +534,7 @@
 </style>
 </head>
 <body>
-
+ 
 <div class="login-wrap" id="loginWrap">
   <div class="login-card">
     <img class="logo" src="logo.png" alt="شعار My Home" style="margin:0 auto 10px;">
@@ -548,13 +548,13 @@
     <div id="loginError" class="login-error"></div>
   </div>
 </div>
-
+ 
 <div class="receipt" id="app" style="display:none;">
   <header>
     <img class="logo" src="logo.png" alt="شعار My Home">
     <div class="brand-name">My Home</div>
     <div class="title" id="tabTitle">قائمة البيت الشهرية</div>
-    <div class="month-row">
+    <div class="month-row" id="monthRow">
       <button id="prevMonth">‹</button>
       <span class="month-label" id="monthLabel">—</span>
       <button id="nextMonth">›</button>
@@ -564,13 +564,13 @@
   <div class="dashed"></div>
   <div id="tabContent"></div>
 </div>
-
+ 
 <div class="bottom-nav">
   <div class="bottom-nav-inner" id="bottomNav"></div>
 </div>
 <div id="toast" class="toast"></div>
 <div id="connError" class="conn-error" style="display:none;"></div>
-
+ 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const CATS = [
@@ -581,26 +581,17 @@ const CATS = [
 ];
 const EXPENSE_CATS = CATS.concat([{ id:'other', name:'أخرى', color:'var(--other)' }]);
 const PAYMENT_METHODS = ['كاش','فيزا/بطاقة','محفظة إلكترونية'];
-
+ 
 const SUB_SUGGESTIONS = {
   grocery: ['بقالة جافة','معلبات ومشروبات','خضار وفاكهة','ألبان وبيض','حلويات ومقرمشات'],
   protein: ['لحوم','دواجن','أسماك'],
   bathroom: ['عناية شخصية','منظفات وغسيل'],
   delivery: ['مطاعم','كافيهات','تطبيقات توصيل'],
 };
-
+ 
 const DEFAULT_TOILETRIES = ['شامبو','شاور جل','مناديل تواليت','معجون أسنان'];
 const ARABIC_MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-
-const FAMILY_MEMBERS = [
-  { name:'أشرف', role:'بابا' },
-  { name:'مديحة', role:'ماما' },
-  { name:'سلمى', role:'' },
-  { name:'سارة', role:'' },
-  { name:'ياسين', role:'' },
-  { name:'محمد', role:'' },
-];
-
+ 
 const TABS = [
   { id:'home', icon:'🏠', label:'الرئيسية', title:'الرئيسية' },
   { id:'expenses', icon:'💰', label:'المصروفات', title:'المصروفات' },
@@ -608,21 +599,22 @@ const TABS = [
   { id:'shopping', icon:'🛒', label:'المشتريات', title:'قائمة المشتريات' },
   { id:'requests', icon:'🙋', label:'الطلبات', title:'طلبات البيت' },
 ];
-
+ 
 let current = new Date();
 current.setDate(1);
 let state = null;
 let activeTab = 'home';
 let expPeriod = 'month'; // day | week | month
 let myName = '';
+let myRole = 'kid'; // 'admin' | 'kid' — يتجاب من جدول profiles بعد تسجيل الدخول
 let familyRequests = [];
-
+ 
 function monthKey(d){ return 'household:' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); }
 function monthLabelText(d){ return ARABIC_MONTHS[d.getMonth()] + ' ' + d.getFullYear(); }
 function toArabicNum(n){ return Number(n||0).toLocaleString('ar-EG', {maximumFractionDigits:2}); }
 function todayStr(){ const t=new Date(); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); }
 function isSameRealMonth(d){ const t=new Date(); return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth(); }
-
+ 
 let toastTimer=null;
 function showToast(msg, ms){
   const t = document.getElementById('toast');
@@ -632,15 +624,15 @@ function showToast(msg, ms){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=> t.classList.remove('show'), ms||2600);
 }
-
+ 
 /* ============================================================
    Supabase config — استبدل القيمتين دول بقيم مشروعك
    (Project Settings > API في لوحة تحكم Supabase)
    ============================================================ */
 const SUPABASE_URL = 'https://mxirtxhlnvnkfxzipikf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14aXJ0eGhsbnZua2Z4emlwaWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzODIzOTYsImV4cCI6MjEwNDk1ODM5Nn0.JVUBuSqg8LTBh-nvkBgKBql-zNE7nqWz-K0ttHMYmL0';
+const SUPABASE_ANON_KEY = 'sb_publishable_OSQDqkuxIWCnzZ8JwnEQOQ_dWgOjpoV';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+ 
 function showConnError(msg){
   const el = document.getElementById('connError');
   if(!el) return;
@@ -651,7 +643,7 @@ function hideConnError(){
   const el = document.getElementById('connError');
   if(el) el.style.display = 'none';
 }
-
+ 
 function defaultSalaryAlloc(){
   return [
     { id:crypto.randomUUID(), name:'مصروفات أساسية (إيجار - أكل - شرب)', percent:55 },
@@ -661,7 +653,7 @@ function defaultSalaryAlloc(){
     { id:crypto.randomUUID(), name:'استثمار', percent:15 },
   ];
 }
-
+ 
 function emptyState(){
   const cats = {};
   CATS.forEach(c=>{
@@ -671,7 +663,7 @@ function emptyState(){
   });
   return { budget:'', cats, expenses:[], salary:'', salaryAlloc:defaultSalaryAlloc() };
 }
-
+ 
 function migrate(st){
   if(st.cats && st.cats.market){ st.cats.grocery = (st.cats.grocery||[]).concat(st.cats.market); delete st.cats.market; }
   if(st.cats && (st.cats.meat || st.cats.fish)){
@@ -696,7 +688,7 @@ function migrate(st){
   st.salaryAlloc.forEach(a=>{ if(!a.id) a.id = crypto.randomUUID(); });
   return st;
 }
-
+ 
 async function loadMonth(){
   const key = monthKey(current);
   document.getElementById('monthLabel').textContent = monthLabelText(current);
@@ -707,11 +699,11 @@ async function loadMonth(){
     hideConnError();
   }catch(e){
     state = emptyState();
-    showConnError('تعذر تحميل بيانات الشهر ده — تأكد من الاتصال بالإنترنت.');
+    showConnError('تعذر تحميل بيانات الشهر: ' + (e && e.message ? e.message : 'خطأ غير معروف'));
   }
   render();
 }
-
+ 
 let saveTimer=null;
 function saveMonth(){
   clearTimeout(saveTimer);
@@ -724,18 +716,32 @@ function saveMonth(){
       });
       if(error) throw error;
       hideConnError();
-    }catch(e){ showConnError('تعذر حفظ آخر تعديل — تأكد من الاتصال بالإنترنت.'); }
+    }catch(e){ showConnError('تعذر حفظ آخر تعديل: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
   }, 400);
 }
-
-function loadMyName(){
-  myName = localStorage.getItem('myHomeName') || '';
+ 
+async function loadMyProfile(){
+  try{
+    const { data:userData } = await sb.auth.getUser();
+    const uid = userData && userData.user ? userData.user.id : null;
+    if(!uid){ myName=''; myRole='kid'; return; }
+    const { data, error } = await sb.from('profiles').select('name, role').eq('id', uid).maybeSingle();
+    if(error) throw error;
+    if(data){
+      myName = data.name;
+      myRole = data.role;
+    } else {
+      // مفيش بروفايل متعمول للحساب ده لسه — نديله أقل صلاحية كإجراء أمان افتراضي
+      myName = (userData.user.email || 'مستخدم').split('@')[0];
+      myRole = 'kid';
+      showToast('الحساب ده لسه مالوش بروفايل في جدول profiles — راجع خطوات الإعداد.');
+    }
+  }catch(e){
+    myName=''; myRole='kid';
+    showConnError('تعذر تحميل بيانات المستخدم: ' + (e && e.message ? e.message : 'خطأ غير معروف'));
+  }
 }
-function saveMyName(n){
-  myName = n;
-  try{ localStorage.setItem('myHomeName', n); }catch(e){}
-}
-
+ 
 async function loadFamilyRequests(){
   try{
     const { data, error } = await sb.from('family_requests').select('*').order('created_at', { ascending:false });
@@ -747,10 +753,10 @@ async function loadFamilyRequests(){
     hideConnError();
   }catch(e){
     familyRequests = [];
-    showConnError('تعذر تحميل طلبات البيت.');
+    showConnError('تعذر تحميل طلبات البيت: ' + (e && e.message ? e.message : 'خطأ غير معروف'));
   }
 }
-
+ 
 let requestsChannel = null;
 function subscribeFamilyRequests(){
   if(requestsChannel) return;
@@ -761,7 +767,7 @@ function subscribeFamilyRequests(){
     })
     .subscribe();
 }
-
+ 
 function catTotal(items){ return items.reduce((s,i)=> s+(Number(i.qty)||0)*(Number(i.price)||0), 0); }
 function catBought(items){ return items.reduce((s,i)=> s+(i.bought?(Number(i.qty)||0)*(Number(i.price)||0):0), 0); }
 function shoppingBoughtTotal(){ return CATS.reduce((s,c)=> s+catBought(state.cats[c.id]||[]), 0); }
@@ -769,8 +775,9 @@ function shoppingPendingCount(){ return CATS.reduce((s,c)=> s+(state.cats[c.id]|
 function expensesTotal(list){ return (list||state.expenses).reduce((s,e)=> s+(Number(e.amount)||0), 0); }
 function actualSpentTotal(){ return shoppingBoughtTotal() + expensesTotal(); }
 function catInfo(id){ return EXPENSE_CATS.find(c=>c.id===id) || EXPENSE_CATS[EXPENSE_CATS.length-1]; }
-
+ 
 function render(){
+  if(myRole==='kid') activeTab='requests';
   document.getElementById('tabTitle').textContent = TABS.find(t=>t.id===activeTab).title;
   renderNav();
   const wrap = document.getElementById('tabContent');
@@ -781,11 +788,12 @@ function render(){
   else if(activeTab==='requests') renderRequests(wrap);
   else renderShopping(wrap);
 }
-
+ 
 function renderNav(){
   const nav = document.getElementById('bottomNav');
   nav.innerHTML = '';
-  TABS.forEach(t=>{
+  const visibleTabs = myRole==='admin' ? TABS : TABS.filter(t=>t.id==='requests');
+  visibleTabs.forEach(t=>{
     const btn = document.createElement('button');
     btn.className = 'nav-btn' + (activeTab===t.id ? ' active' : '');
     btn.innerHTML = '<span class="nav-icon">'+t.icon+'</span><span>'+t.label+'</span>';
@@ -797,13 +805,13 @@ function renderNav(){
     nav.appendChild(btn);
   });
 }
-
+ 
 /* ---------------- HOME ---------------- */
 function renderHome(wrap){
   const budget = parseFloat(state.budget);
   const spent = actualSpentTotal();
   const pct = budget>0 ? Math.min(100, Math.round((spent/budget)*100)) : null;
-
+ 
   const budgetCard = document.createElement('div');
   budgetCard.className = 'card';
   let barColor = 'var(--good)';
@@ -816,7 +824,7 @@ function renderHome(wrap){
     ${budget>0 ? `<div class="progress"><div style="width:${pct}%;background:${barColor}"></div></div>` : ''}
   `;
   wrap.appendChild(budgetCard);
-
+ 
   const todayTotal = state.expenses.filter(e=>e.date===todayStr()).reduce((s,e)=>s+(Number(e.amount)||0),0);
   const grid = document.createElement('div');
   grid.className = 'card-grid';
@@ -828,19 +836,19 @@ function renderHome(wrap){
     <div class="card"><div class="card-label">عدد العمليات</div><div class="card-value">${toArabicNum(state.expenses.length)}</div></div>
   `;
   wrap.appendChild(grid);
-
+ 
   const qa = document.createElement('div');
   qa.className = 'quick-actions';
   qa.innerHTML = `<button id="qaExpense">+ إضافة مصروف</button><button id="qaOrder">+ أضف طلب</button>`;
   wrap.appendChild(qa);
   qa.querySelector('#qaExpense').onclick = ()=>{ activeTab='expenses'; render(); };
   qa.querySelector('#qaOrder').onclick = ()=>{ activeTab='shopping'; render(); };
-
+ 
   const secTitle = document.createElement('div');
   secTitle.className = 'section-title';
   secTitle.textContent = 'آخر العمليات';
   wrap.appendChild(secTitle);
-
+ 
   const recent = [...state.expenses].sort((a,b)=> (b.date||'').localeCompare(a.date||'')).slice(0,5);
   if(recent.length===0){
     const hint = document.createElement('div');
@@ -864,7 +872,7 @@ function renderHome(wrap){
     });
   }
 }
-
+ 
 /* ---------------- EXPENSES ---------------- */
 function periodFilter(list){
   const now = new Date();
@@ -881,7 +889,7 @@ function periodFilter(list){
   }
   return list; // month = everything in this month's state
 }
-
+ 
 function renderExpenses(wrap){
   const form = document.createElement('div');
   form.className = 'exp-form';
@@ -928,7 +936,7 @@ function renderExpenses(wrap){
     saveMonth();
     render();
   };
-
+ 
   const periodTabs = document.createElement('div');
   periodTabs.className='period-tabs';
   const periods = [['day','يومي'],['week','أسبوعي'],['month','شهري']];
@@ -937,13 +945,13 @@ function renderExpenses(wrap){
     b.onclick = ()=>{ expPeriod = b.dataset.p; render(); };
   });
   wrap.appendChild(periodTabs);
-
+ 
   const filtered = periodFilter(state.expenses).sort((a,b)=> (b.date||'').localeCompare(a.date||''));
   const totalCard = document.createElement('div');
   totalCard.className='card';
   totalCard.innerHTML = `<div class="card-label">إجمالي الفترة</div><div class="card-value">${toArabicNum(expensesTotal(filtered))} ج.م</div>`;
   wrap.appendChild(totalCard);
-
+ 
   if(filtered.length===0){
     const hint=document.createElement('div');
     hint.className='empty-hint';
@@ -951,7 +959,7 @@ function renderExpenses(wrap){
     wrap.appendChild(hint);
     return;
   }
-
+ 
   filtered.forEach(e=>{
     const c = catInfo(e.category);
     const row = document.createElement('div');
@@ -972,7 +980,7 @@ function renderExpenses(wrap){
     wrap.appendChild(row);
   });
 }
-
+ 
 /* ---------------- BUDGET ---------------- */
 function renderBudget(wrap){
   const budRow = document.createElement('div');
@@ -984,10 +992,10 @@ function renderBudget(wrap){
   `;
   wrap.appendChild(budRow);
   budRow.querySelector('#budgetInput').addEventListener('input', e=>{ state.budget = e.target.value; saveMonth(); render(); });
-
+ 
   const budget = parseFloat(state.budget);
   const spent = actualSpentTotal();
-
+ 
   if(!budget || budget<=0){
     const hint = document.createElement('div');
     hint.className='empty-hint';
@@ -996,7 +1004,7 @@ function renderBudget(wrap){
     renderSalaryAllocation(wrap);
     return;
   }
-
+ 
   const pct = Math.round((spent/budget)*100);
   if(pct>=100){
     const b=document.createElement('div'); b.className='banner bad';
@@ -1007,7 +1015,7 @@ function renderBudget(wrap){
     b.textContent = 'تنبيه: استهلكت ' + pct + '% من ميزانية الشهر';
     wrap.appendChild(b);
   }
-
+ 
   const grid = document.createElement('div');
   grid.className='card-grid';
   grid.style.marginBottom='12px';
@@ -1023,14 +1031,14 @@ function renderBudget(wrap){
     </div>
   `;
   wrap.appendChild(grid);
-
+ 
   const barColor = pct>=100?'var(--bad)':pct>=80?'var(--warn)':'var(--good)';
   const progCard = document.createElement('div');
   progCard.className='card';
   progCard.innerHTML = `<div class="card-label">المصروف حتى الآن من إجمالي الميزانية</div>
     <div class="progress"><div style="width:${Math.min(100,pct)}%;background:${barColor}"></div></div>`;
   wrap.appendChild(progCard);
-
+ 
   if(isSameRealMonth(current)){
     const now = new Date();
     const dayNum = now.getDate();
@@ -1042,20 +1050,20 @@ function renderBudget(wrap){
       <div class="card-value ${projected>budget?'bad':'good'}">${toArabicNum(projected)} ج.م</div>`;
     wrap.appendChild(projCard);
   }
-
+ 
   renderSalaryAllocation(wrap);
 }
-
+ 
 function renderSalaryAllocation(wrap){
   const dashed = document.createElement('div');
   dashed.className='dashed';
   wrap.appendChild(dashed);
-
+ 
   const secTitle = document.createElement('div');
   secTitle.className='section-title';
   secTitle.textContent='توزيع الراتب الشهري';
   wrap.appendChild(secTitle);
-
+ 
   const salaryCard = document.createElement('div');
   salaryCard.className='card';
   salaryCard.innerHTML = `
@@ -1067,12 +1075,12 @@ function renderSalaryAllocation(wrap){
   salaryCard.querySelector('#salaryInput').addEventListener('input', e=>{
     state.salary = e.target.value; saveMonth(); updateAllocAmounts();
   });
-
+ 
   const salary = parseFloat(state.salary)||0;
   const list = document.createElement('div');
   list.id='allocList';
   wrap.appendChild(list);
-
+ 
   const renderAllocRows = ()=>{
     list.innerHTML = '';
     state.salaryAlloc.forEach(a=>{
@@ -1098,7 +1106,7 @@ function renderSalaryAllocation(wrap){
       row.appendChild(del);
       list.appendChild(row);
     });
-
+ 
     const totalPct = state.salaryAlloc.reduce((s,a)=> s+(Number(a.percent)||0), 0);
     const totalRow = document.createElement('div');
     totalRow.className='alloc-total-row';
@@ -1107,7 +1115,7 @@ function renderSalaryAllocation(wrap){
     list.appendChild(totalRow);
   };
   renderAllocRows();
-
+ 
   const addRow = document.createElement('div');
   addRow.className='alloc-add-row';
   addRow.innerHTML = `
@@ -1123,7 +1131,7 @@ function renderSalaryAllocation(wrap){
     saveMonth(); render();
   };
   wrap.appendChild(addRow);
-
+ 
   function updateAllocAmounts(){
     const sal = parseFloat(state.salary)||0;
     state.salaryAlloc.forEach(a=>{
@@ -1138,7 +1146,7 @@ function renderSalaryAllocation(wrap){
     }
   }
 }
-
+ 
 /* ---------------- SHOPPING (existing list) ---------------- */
 function updateCatTotalsInline(){
   CATS.forEach(c=>{
@@ -1150,7 +1158,7 @@ function updateCatTotalsInline(){
   if(sumBought) sumBought.textContent = toArabicNum(shoppingBoughtTotal()) + ' ج.م';
   if(sumGrand) sumGrand.textContent = toArabicNum(CATS.reduce((s,c)=> s+catTotal(state.cats[c.id]||[]),0)) + ' ج.م';
 }
-
+ 
 function renderShopping(wrap){
   CATS.forEach(cat=>{
     const items = state.cats[cat.id] || [];
@@ -1163,18 +1171,18 @@ function renderShopping(wrap){
       <span class="cat-name">${cat.name}</span>
       <span class="cat-total" id="catTotal-${cat.id}">${toArabicNum(t)} ج.م</span>`;
     catEl.appendChild(head);
-
+ 
     if(items.length===0){
       const hint=document.createElement('div');
       hint.className='empty-hint';
       hint.textContent='لا توجد أصناف بعد';
       catEl.appendChild(hint);
     }
-
+ 
     const groups = new Map();
     items.forEach(item=>{ const key=item.sub||''; if(!groups.has(key)) groups.set(key,[]); groups.get(key).push(item); });
     const hasNamedSubs = [...groups.keys()].some(k=>k!=='');
-
+ 
     const renderItem = (item, container)=>{
       const row = document.createElement('div');
       row.className='item'+(item.bought?' bought':'');
@@ -1182,10 +1190,10 @@ function renderShopping(wrap){
       chk.className='chk';
       chk.textContent = item.bought?'✓':'';
       chk.onclick = ()=>{ item.bought=!item.bought; saveMonth(); render(); };
-
+ 
       const name=document.createElement('div');
       name.className='item-name'; name.textContent=item.name;
-
+ 
       const actions = document.createElement('div');
       actions.className='item-actions';
       const dup = document.createElement('button');
@@ -1202,9 +1210,9 @@ function renderShopping(wrap){
       del.className='del'; del.textContent='✕';
       del.onclick = ()=>{ state.cats[cat.id]=state.cats[cat.id].filter(i=>i.id!==item.id); saveMonth(); render(); };
       actions.appendChild(dup); actions.appendChild(del);
-
+ 
       row.appendChild(chk); row.appendChild(name); row.appendChild(actions);
-
+ 
       const calcRow = document.createElement('div');
       calcRow.className='item-calc-row';
       const qtyIn = document.createElement('input');
@@ -1215,7 +1223,7 @@ function renderShopping(wrap){
       const eq = document.createElement('span'); eq.textContent='=';
       const total = document.createElement('span'); total.className='eq-total';
       total.textContent = toArabicNum((item.qty||0)*(item.price||0)) + ' ج.م';
-
+ 
       qtyIn.addEventListener('input', ()=>{
         item.qty = parseFloat(qtyIn.value)||0;
         total.textContent = toArabicNum((item.qty||0)*(item.price||0)) + ' ج.م';
@@ -1228,14 +1236,14 @@ function renderShopping(wrap){
         saveMonth();
         updateCatTotalsInline();
       });
-
+ 
       calcRow.appendChild(qtyIn); calcRow.appendChild(xSpan); calcRow.appendChild(priceIn);
       calcRow.appendChild(eq); calcRow.appendChild(total);
       row.appendChild(calcRow);
-
+ 
       container.appendChild(row);
     };
-
+ 
     groups.forEach((groupItems, key)=>{
       if(hasNamedSubs && key!==''){
         const subHead=document.createElement('div');
@@ -1244,7 +1252,7 @@ function renderShopping(wrap){
       }
       groupItems.forEach(item=> renderItem(item, catEl));
     });
-
+ 
     const addRow = document.createElement('div');
     addRow.className='add-row';
     const subOptions = [...new Set([...(SUB_SUGGESTIONS[cat.id]||[]), ...groups.keys()].filter(Boolean))];
@@ -1273,10 +1281,10 @@ function renderShopping(wrap){
     catEl.appendChild(addRow);
     wrap.appendChild(catEl);
   });
-
+ 
   const grandTotal = CATS.reduce((s,c)=> s+catTotal(state.cats[c.id]||[]), 0);
   const grandBought = shoppingBoughtTotal();
-
+ 
   const foot = document.createElement('footer');
   foot.innerHTML = `
     <div class="dashed"></div>
@@ -1284,13 +1292,13 @@ function renderShopping(wrap){
     <div class="sum-row total"><span>الإجمالي الكلي المخطط</span><span class="sum-val" id="sumGrand">${toArabicNum(grandTotal)} ج.م</span></div>
   `;
   wrap.appendChild(foot);
-
+ 
   const shareBtn = document.createElement('button');
   shareBtn.className='reset-link';
   shareBtn.textContent='مشاركة/نسخ القائمة';
   shareBtn.onclick = shareList;
   wrap.appendChild(shareBtn);
-
+ 
   const resetBtn = document.createElement('button');
   resetBtn.className='reset-link';
   resetBtn.textContent='تفريغ هذا الشهر';
@@ -1317,7 +1325,7 @@ function renderShopping(wrap){
   };
   wrap.appendChild(resetBtn);
 }
-
+ 
 async function shareList(){
   let lines = ['قائمة البيت - '+monthLabelText(current), ''];
   let grand = 0;
@@ -1360,13 +1368,7 @@ async function shareList(){
     showToast('النسخ التلقائي مش متاح — انسخ النص من الصندوق تحت يدوي.');
   }
 }
-
-function ensureName(){
-  if(myName) return true;
-  showToast('اختار مين حضرتك فوق الأول ✋');
-  return false;
-}
-
+ 
 /* ---------------- FAMILY REQUESTS (shared across whoever opens this same link) ---------------- */
 function renderRequests(wrap){
   const note = document.createElement('div');
@@ -1374,45 +1376,18 @@ function renderRequests(wrap){
   note.style.marginBottom='10px';
   note.textContent = 'الليست دي بتتحدث لحظياً لأي حد مسجّل دخول بنفس بيانات البيت، على أي جهاز.';
   wrap.appendChild(note);
-
+ 
   const nameCard = document.createElement('div');
   nameCard.className='card name-card';
-  if(myName){
-    nameCard.innerHTML = `<span>أنت: <strong>${myName}</strong></span>`;
-    const change = document.createElement('button');
-    change.textContent='تغيير';
-    change.onclick = ()=>{ saveMyName(''); render(); };
-    nameCard.appendChild(change);
-    wrap.appendChild(nameCard);
-  } else {
-    nameCard.style.display='block';
-    const label = document.createElement('div');
-    label.className='card-label';
-    label.style.marginBottom='8px';
-    label.textContent='مين بيستخدم دلوقتي؟';
-    nameCard.appendChild(label);
-
-    const grid = document.createElement('div');
-    grid.className='picker-grid';
-    FAMILY_MEMBERS.forEach(m=>{
-      const btn = document.createElement('button');
-      btn.className='picker-btn';
-      btn.innerHTML = `<span class="p-name">${m.name}</span>${m.role?`<span class="p-role">${m.role}</span>`:''}`;
-      btn.onclick = ()=>{ saveMyName(m.name); render(); };
-      grid.appendChild(btn);
-    });
-    nameCard.appendChild(grid);
-    wrap.appendChild(nameCard);
-  }
-
+  nameCard.innerHTML = `<span>أنت: <strong>${myName}</strong>${myRole==='admin' ? ' (إدارة كاملة)' : ' (طلبات بس)'}</span>`;
+  wrap.appendChild(nameCard);
+ 
   const addRow = document.createElement('div');
   addRow.className='req-add-row';
   addRow.innerHTML = `<input type="text" id="reqText" placeholder="عايز إيه؟ مثلاً: هاتلي شاحن من الصيدلية">
     <button id="reqAddBtn">إضافة</button>`;
   wrap.appendChild(addRow);
   addRow.querySelector('#reqAddBtn').onclick = async ()=>{
-    const ok = await ensureName();
-    if(!ok) return;
     const txt = addRow.querySelector('#reqText').value.trim();
     if(!txt) return;
     addRow.querySelector('#reqText').value='';
@@ -1426,22 +1401,22 @@ function renderRequests(wrap){
         claimedBy:data.claimed_by, createdAt:new Date(data.created_at).getTime()
       });
       hideConnError();
-    }catch(e){ showConnError('تعذر إضافة الطلب — تأكد من الاتصال.'); }
+    }catch(e){ showConnError('تعذر إضافة الطلب: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
     render();
   };
-
+ 
   const refresh = document.createElement('button');
   refresh.className='refresh-link';
   refresh.textContent='🔄 تحديث القائمة (تجيب أحدث الطلبات من الكل)';
   refresh.onclick = async ()=>{ await loadFamilyRequests(); render(); };
   wrap.appendChild(refresh);
-
+ 
   const sorted = [...familyRequests].sort((a,b)=>{
     const order = {pending:0, claimed:1, done:2};
     if(order[a.status]!==order[b.status]) return order[a.status]-order[b.status];
     return (b.createdAt||0)-(a.createdAt||0);
   });
-
+ 
   if(sorted.length===0){
     const hint = document.createElement('div');
     hint.className='empty-hint';
@@ -1449,7 +1424,7 @@ function renderRequests(wrap){
     wrap.appendChild(hint);
     return;
   }
-
+ 
   sorted.forEach(r=>{
     const row = document.createElement('div');
     row.className='req-row'+(r.status==='done'?' done':'');
@@ -1465,86 +1440,89 @@ function renderRequests(wrap){
     `;
     const actions = document.createElement('div');
     actions.className='req-actions';
-    if(r.status==='pending'){
-      const claim = document.createElement('button');
-      claim.className='primary';
-      claim.textContent='أنا جاي هجيبها';
-      claim.onclick = async ()=>{
-        const ok = await ensureName();
-        if(!ok) return;
-        r.status='claimed'; r.claimedBy=myName;
+    if(myRole==='admin'){
+      if(r.status==='pending'){
+        const claim = document.createElement('button');
+        claim.className='primary';
+        claim.textContent='أنا جاي هجيبها';
+        claim.onclick = async ()=>{
+          r.status='claimed'; r.claimedBy=myName;
+          try{
+            const { error } = await sb.from('family_requests').update({ status:'claimed', claimed_by:myName }).eq('id', r.id);
+            if(error) throw error;
+            hideConnError();
+          }catch(e){ showConnError('تعذر تحديث الطلب: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+          render();
+        };
+        actions.appendChild(claim);
+      } else if(r.status==='claimed'){
+        const done = document.createElement('button');
+        done.className='primary';
+        done.textContent='تم الإحضار ✓';
+        done.onclick = async ()=>{
+          r.status='done';
+          try{
+            const { error } = await sb.from('family_requests').update({ status:'done' }).eq('id', r.id);
+            if(error) throw error;
+            hideConnError();
+          }catch(e){ showConnError('تعذر تحديث الطلب: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+          render();
+        };
+        actions.appendChild(done);
+        const release = document.createElement('button');
+        release.textContent='إلغاء';
+        release.onclick = async ()=>{
+          r.status='pending'; r.claimedBy='';
+          try{
+            const { error } = await sb.from('family_requests').update({ status:'pending', claimed_by:'' }).eq('id', r.id);
+            if(error) throw error;
+            hideConnError();
+          }catch(e){ showConnError('تعذر تحديث الطلب: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+          render();
+        };
+        actions.appendChild(release);
+      }
+      const del = document.createElement('button');
+      del.textContent='✕ حذف';
+      del.onclick = async ()=>{
+        familyRequests = familyRequests.filter(x=>x.id!==r.id);
         try{
-          const { error } = await sb.from('family_requests').update({ status:'claimed', claimed_by:myName }).eq('id', r.id);
+          const { error } = await sb.from('family_requests').delete().eq('id', r.id);
           if(error) throw error;
           hideConnError();
-        }catch(e){ showConnError('تعذر تحديث الطلب.'); }
+        }catch(e){ showConnError('تعذر حذف الطلب: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
         render();
       };
-      actions.appendChild(claim);
-    } else if(r.status==='claimed'){
-      const done = document.createElement('button');
-      done.className='primary';
-      done.textContent='تم الإحضار ✓';
-      done.onclick = async ()=>{
-        r.status='done';
-        try{
-          const { error } = await sb.from('family_requests').update({ status:'done' }).eq('id', r.id);
-          if(error) throw error;
-          hideConnError();
-        }catch(e){ showConnError('تعذر تحديث الطلب.'); }
-        render();
-      };
-      actions.appendChild(done);
-      const release = document.createElement('button');
-      release.textContent='إلغاء';
-      release.onclick = async ()=>{
-        r.status='pending'; r.claimedBy='';
-        try{
-          const { error } = await sb.from('family_requests').update({ status:'pending', claimed_by:'' }).eq('id', r.id);
-          if(error) throw error;
-          hideConnError();
-        }catch(e){ showConnError('تعذر تحديث الطلب.'); }
-        render();
-      };
-      actions.appendChild(release);
+      actions.appendChild(del);
     }
-    const del = document.createElement('button');
-    del.textContent='✕ حذف';
-    del.onclick = async ()=>{
-      familyRequests = familyRequests.filter(x=>x.id!==r.id);
-      try{
-        const { error } = await sb.from('family_requests').delete().eq('id', r.id);
-        if(error) throw error;
-        hideConnError();
-      }catch(e){ showConnError('تعذر حذف الطلب.'); }
-      render();
-    };
     actions.appendChild(del);
     row.appendChild(actions);
     wrap.appendChild(row);
   });
 }
-
+ 
 document.getElementById('prevMonth').onclick = ()=>{ current.setMonth(current.getMonth()-1); loadMonth(); };
 document.getElementById('nextMonth').onclick = ()=>{ current.setMonth(current.getMonth()+1); loadMonth(); };
-
+ 
 /* ---------------- AUTH GATE ---------------- */
 async function bootApp(){
   document.getElementById('loginWrap').style.display = 'none';
   document.getElementById('app').style.display = '';
-  loadMyName();
+  await loadMyProfile();
+  if(myRole==='kid') activeTab='requests';
+  document.getElementById('monthRow').style.display = (myRole==='admin') ? '' : 'none';
   await loadFamilyRequests();
   subscribeFamilyRequests();
-  await loadMonth();
+  if(myRole==='admin'){ await loadMonth(); } else { render(); }
 }
-
+ 
 function showLogin(errMsg){
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginWrap').style.display = 'flex';
   const errEl = document.getElementById('loginError');
   errEl.textContent = errMsg || '';
 }
-
+ 
 document.getElementById('loginBtn').onclick = async ()=>{
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
@@ -1559,13 +1537,13 @@ document.getElementById('loginBtn').onclick = async ()=>{
     errEl.textContent = 'تعذر الاتصال بالسيرفر — تأكد من إعداد SUPABASE_URL و SUPABASE_ANON_KEY في الكود.';
   }
 };
-
+ 
 document.getElementById('logoutLink').onclick = async ()=>{
   try{ await sb.auth.signOut(); }catch(e){}
   if(requestsChannel){ sb.removeChannel(requestsChannel); requestsChannel = null; }
   showLogin();
 };
-
+ 
 (async ()=>{
   try{
     const { data } = await sb.auth.getSession();
