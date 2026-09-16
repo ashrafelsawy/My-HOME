@@ -425,6 +425,12 @@
     box-shadow:0 6px 16px rgba(0,0,0,.25);
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.blessing{
+    background:linear-gradient(135deg, #C68A2E, #A2661E);
+    font-weight:700;
+    font-size:14px;
+    padding:12px 20px;
+  }
  
   .copy-box{
     width:100%;
@@ -592,6 +598,21 @@ const SUB_SUGGESTIONS = {
 const DEFAULT_TOILETRIES = ['شامبو','شاور جل','مناديل تواليت','معجون أسنان'];
 const ARABIC_MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
  
+const BLESSINGS = {
+  'أشرف': ['ربنا يبارك في تعبك يا باشا', 'الله يكرمك ويجازيك خير', 'ربنا يديم عليك الصحة والعافية', 'تعبك ميضيعش يا رب'],
+  'مديحة': ['ربنا يخليكِ لينا يا حاجة', 'ربنا يكرمك ويوسع عليكِ', 'الله يبارك فيكِ يا قمر', 'ربنا يهون عليكِ ويعينك'],
+  'سلمى': ['ربنا يسعدك يا سلمى', 'الله يخليكي لينا', 'تسلمي يا قمر', 'ربنا يوفقك في كل حاجة'],
+  'سارة': ['ربنا يبارك فيكي يا سارة', 'الله يخليكي لينا', 'تسلمي يا عسل', 'ربنا يسعد قلبك'],
+  'ياسين': ['الله يبارك فيك يا باشا', 'ربنا يوفقك يا ياسين', 'تسلم يا كبير', 'ربنا يحفظك'],
+  'محمد': ['ربنا يبارك فيك يا محمد', 'تسلم إيدك', 'الله يوفقك', 'ربنا يخليك ليهم'],
+};
+const DEFAULT_BLESSINGS = ['ربنا يكرمك', 'تسلم إيدك', 'الله يبارك فيك'];
+ 
+function pickBlessing(name){
+  const pool = BLESSINGS[name] || DEFAULT_BLESSINGS;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+ 
 const TABS = [
   { id:'home', icon:'🏠', label:'الرئيسية', title:'الرئيسية' },
   { id:'expenses', icon:'💰', label:'المصروفات', title:'المصروفات' },
@@ -619,10 +640,21 @@ let toastTimer=null;
 function showToast(msg, ms){
   const t = document.getElementById('toast');
   if(!t) return;
+  t.classList.remove('blessing');
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=> t.classList.remove('show'), ms||2600);
+}
+ 
+function showBlessing(msg){
+  const t = document.getElementById('toast');
+  if(!t) return;
+  t.classList.add('blessing');
+  t.textContent = '🤍 ' + msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> { t.classList.remove('show'); t.classList.remove('blessing'); }, 3800);
 }
  
 /* ============================================================
@@ -1401,6 +1433,7 @@ function renderRequests(wrap){
         claimedBy:data.claimed_by, createdAt:new Date(data.created_at).getTime()
       });
       hideConnError();
+      showBlessing(pickBlessing(myName));
     }catch(e){ showConnError('تعذر إضافة الطلب: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
     render();
   };
@@ -1495,7 +1528,6 @@ function renderRequests(wrap){
       };
       actions.appendChild(del);
     }
-    actions.appendChild(del);
     row.appendChild(actions);
     wrap.appendChild(row);
   });
