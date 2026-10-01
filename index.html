@@ -121,6 +121,42 @@
   }
   .progress > div{ height:100%; border-radius:5px; }
 
+  .status-strip{
+    background:#15231a;
+    border-radius:14px;
+    padding:16px 14px;
+    text-align:center;
+    margin-bottom:14px;
+  }
+  .digital-clock{
+    font-family:'Courier New', monospace;
+    font-size:34px;
+    font-weight:700;
+    color:#3ddc5a;
+    letter-spacing:2px;
+    text-shadow:0 0 10px rgba(61,220,90,.55);
+  }
+  .status-sub{
+    font-size:12px;
+    color:#9fc9a8;
+    margin-top:4px;
+  }
+  .status-chips{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:10px;
+    flex-wrap:wrap;
+  }
+  .status-chips .chip{
+    background:rgba(61,220,90,.12);
+    color:#c8e6ce;
+    border:1px solid rgba(61,220,90,.3);
+    border-radius:20px;
+    padding:4px 12px;
+    font-size:12px;
+  }
+
   .quick-actions{ display:flex; gap:10px; margin:4px 0 14px; }
   .quick-actions button{
     flex:1;
@@ -825,6 +861,64 @@ async function loadFamilyRequests(){
 }
 
 let requestsChannel = null;
+const ARABIC_DAYS = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+let clockTimer = null;
+function startClock(){
+  if(clockTimer) { updateClockDisplay(); return; }
+  updateClockDisplay();
+  clockTimer = setInterval(updateClockDisplay, 1000);
+}
+function updateClockDisplay(){
+  const clockEl = document.getElementById('digitalClock');
+  const subEl = document.getElementById('statusSub');
+  if(!clockEl && !subEl) return;
+  const now = new Date();
+  if(clockEl){
+    clockEl.textContent = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
+  }
+  if(subEl){
+    const dayName = ARABIC_DAYS[now.getDay()];
+    const gregorian = now.toLocaleDateString('ar-EG', { day:'numeric', month:'long', year:'numeric' });
+    let hijri = '';
+    try{
+      hijri = new Intl.DateTimeFormat('ar-EG-u-ca-islamic-umalqura', { day:'numeric', month:'long', year:'numeric' }).format(now);
+    }catch(e){}
+    subEl.textContent = dayName + ' — ' + gregorian + (hijri ? ' (' + hijri + ' هـ)' : '');
+  }
+}
+
+const weatherCache = { value:null, at:0 };
+async function fetchWeather(){
+  try{
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=30.0444&longitude=31.2357&current_weather=true');
+    const data = await res.json();
+    const t = data && data.current_weather ? Math.round(data.current_weather.temperature) : null;
+    weatherCache.value = t; weatherCache.at = Date.now();
+  }catch(e){ weatherCache.value = null; }
+  updateWeatherChip();
+}
+function updateWeatherChip(){
+  const el = document.getElementById('weatherChip');
+  if(!el) return;
+  el.textContent = weatherCache.value!==null ? ('🌡️ ' + toArabicNum(weatherCache.value) + '°م القاهرة') : '🌡️ غير متاح';
+}
+
+const usdCache = { value:null, at:0 };
+async function fetchUsdRate(){
+  try{
+    const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    const data = await res.json();
+    const r = data && data.rates ? data.rates.EGP : null;
+    usdCache.value = r ? Math.round(r*100)/100 : null; usdCache.at = Date.now();
+  }catch(e){ usdCache.value = null; }
+  updateUsdChip();
+}
+function updateUsdChip(){
+  const el = document.getElementById('usdChip');
+  if(!el) return;
+  el.textContent = usdCache.value!==null ? ('💵 الدولار ' + toArabicNum(usdCache.value) + ' ج.م') : '💵 غير متاح';
+}
+
 function playNotifySound(){
   try{
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -938,6 +1032,23 @@ function renderNav(){
 
 /* ---------------- HOME ---------------- */
 function renderHome(wrap){
+  const strip = document.createElement('div');
+  strip.className = 'status-strip';
+  strip.innerHTML = `
+    <div class="digital-clock" id="digitalClock">--:--:--</div>
+    <div class="status-sub" id="statusSub">—</div>
+    <div class="status-chips">
+      <span class="chip" id="weatherChip">🌡️ ...</span>
+      <span class="chip" id="usdChip">💵 ...</span>
+    </div>
+  `;
+  wrap.appendChild(strip);
+  startClock();
+  updateWeatherChip();
+  updateUsdChip();
+  if(!weatherCache.value) fetchWeather();
+  if(!usdCache.value) fetchUsdRate();
+
   const budget = parseFloat(state.budget);
   const spent = actualSpentTotal();
   const pct = budget>0 ? Math.min(100, Math.round((spent/budget)*100)) : null;
