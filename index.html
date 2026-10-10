@@ -157,6 +157,28 @@
     font-size:12px;
   }
 
+
+  .inst-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:10px;
+  }
+  .inst-card.overdue{ border-color:var(--bad); background:#FDF3F1; }
+  .inst-card.done{ opacity:.6; }
+  .inst-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+  .inst-name{ font-weight:700; font-size:15px; }
+  .inst-amount{ font-family:'Courier New',monospace; font-weight:700; font-size:14px; white-space:nowrap; }
+  .inst-meta{ font-size:12px; color:var(--ink-soft); margin-top:4px; line-height:1.7; }
+  .inst-meta .late{ color:var(--bad); font-weight:700; }
+  .inst-actions{ display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+  .inst-actions button{
+    border:1px solid var(--ink); background:var(--paper); color:var(--ink);
+    border-radius:6px; padding:6px 10px; font-size:12px; cursor:pointer;
+  }
+  .inst-actions button.primary{ background:var(--ink); color:var(--paper); }
+
   .quick-actions{ display:flex; gap:10px; margin:4px 0 14px; }
   .quick-actions button{
     flex:1;
@@ -588,10 +610,11 @@
   }
   .nav-btn{
     flex:1;
+    min-width:0;
     background:none;
     border:none;
     color:#C9C2B4;
-    padding:10px 4px 8px;
+    padding:10px 2px 8px;
     font-size:10px;
     cursor:pointer;
     display:flex;
@@ -685,11 +708,13 @@ const TABS = [
   { id:'shopping', icon:'🛒', label:'المشتريات', title:'قائمة المشتريات' },
   { id:'requests', icon:'🙋', label:'الطلبات', title:'طلبات البيت' },
   { id:'chat', icon:'💬', label:'الشات', title:'شات العيلة' },
+  { id:'installments', icon:'📅', label:'الأقساط', title:'الأقساط' },
 ];
 
 const KID_ALLOWED_TABS = ['requests','chat'];
 
 let chatMessages = [];
+let installments = [];
 let chatChannel = null;
 
 let current = new Date();
@@ -1009,6 +1034,7 @@ function render(){
   else if(activeTab==='budget') renderBudget(wrap);
   else if(activeTab==='requests') renderRequests(wrap);
   else if(activeTab==='chat') renderChat(wrap);
+  else if(activeTab==='installments') renderInstallments(wrap);
   else renderShopping(wrap);
 }
 
@@ -1024,6 +1050,7 @@ function renderNav(){
       activeTab = t.id;
       if(t.id==='requests'){ await loadFamilyRequests(); }
       if(t.id==='chat'){ await loadChatMessages(); }
+      if(t.id==='installments'){ await loadInstallments(); }
       render();
     };
     nav.appendChild(btn);
@@ -1065,6 +1092,19 @@ function renderHome(wrap){
     ${budget>0 ? `<div class="progress"><div style="width:${pct}%;background:${barColor}"></div></div>` : ''}
   `;
   wrap.appendChild(budgetCard);
+
+  const nextInst = nextInstallmentOverall();
+  if(nextInst){
+    const ic = document.createElement('div');
+    ic.className = 'card';
+    const when = nextInst.info.overdue
+      ? ('متأخر ' + toArabicNum(Math.abs(nextInst.info.daysLeft)) + ' يوم')
+      : (nextInst.info.daysLeft === 0 ? 'النهاردة' : ('بعد ' + toArabicNum(nextInst.info.daysLeft) + ' يوم'));
+    ic.innerHTML = `<div class="card-label">القسط الجاي</div>
+      <div class="card-value ${nextInst.info.overdue ? 'bad' : (nextInst.info.daysLeft <= 5 ? 'warn' : '')}" style="font-size:16px;"></div>`;
+    ic.querySelector('.card-value').textContent = nextInst.inst.name + ' — ' + toArabicNum(nextInst.inst.monthly_amount) + ' ج.م — ' + when;
+    wrap.appendChild(ic);
+  }
 
   const todayTotal = state.expenses.filter(e=>e.date===todayStr()).reduce((s,e)=>s+(Number(e.amount)||0),0);
   const grid = document.createElement('div');
@@ -1742,6 +1782,236 @@ function renderRequests(wrap){
   });
 }
 
+
+/* ---------------- INSTALLMENTS (admin only) ---------------- */
+async function loadInstallments(){
+  try{
+    const { data, error } = await sb.from('installments').select('*').order('created_at', { ascending:true });
+    if(error) throw error;
+    installments = data || [];
+    hideConnError();
+  }catch(e){
+    installments = [];
+    showConnError('تعذر تحميل الأقساط: ' + (e && e.message ? e.message : 'خطأ غير معروف'));
+  }
+}
+
+function parseDateOnly(str){
+  const [y,m,d] = String(str).split('-').map(Number);
+  return { y, m:m-1, d };
+}
+function dueDateOf(inst, index){
+  const { y, m, d } = parseDateOnly(inst.first_due);
+  const target = new Date(y, m + index, 1);
+  const last = new Date(target.getFullYear(), target.getMonth()+1, 0).getDate();
+  target.setDate(Math.min(d, last));
+  return target;
+}
+function fmtDate(dt){
+  return dt.toLocaleDateString('ar-EG', { day:'numeric', month:'long', year:'numeric' });
+}
+function startOfToday(){ const t = new Date(); t.setHours(0,0,0,0); return t; }
+function instInfo(inst){
+  const finished = inst.paid_count >= inst.total_count;
+  const remainingCount = Math.max(0, inst.total_count - inst.paid_count);
+  const remainingAmount = remainingCount * Number(inst.monthly_amount);
+  let nextDue = null, daysLeft = null, overdue = false;
+  if(!finished){
+    nextDue = dueDateOf(inst, inst.paid_count);
+    daysLeft = Math.round((nextDue - startOfToday()) / 86400000);
+    overdue = daysLeft < 0;
+  }
+  return { finished, remainingCount, remainingAmount, nextDue, daysLeft, overdue };
+}
+function nextInstallmentOverall(){
+  let best = null;
+  installments.forEach(inst=>{
+    const info = instInfo(inst);
+    if(info.finished) return;
+    if(!best || info.nextDue < best.info.nextDue) best = { inst, info };
+  });
+  return best;
+}
+
+function renderInstallments(wrap){
+  const active = installments.filter(i=>!instInfo(i).finished);
+  const monthlyTotal = active.reduce((s,i)=> s + Number(i.monthly_amount), 0);
+  const remainingTotal = active.reduce((s,i)=> s + instInfo(i).remainingAmount, 0);
+  const next = nextInstallmentOverall();
+
+  const grid = document.createElement('div');
+  grid.className = 'card-grid';
+  grid.style.marginBottom = '12px';
+  grid.innerHTML = `
+    <div class="card"><div class="card-label">إجمالي الأقساط الشهرية</div><div class="card-value">${toArabicNum(monthlyTotal)} ج.م</div></div>
+    <div class="card"><div class="card-label">المتبقي كله</div><div class="card-value">${toArabicNum(remainingTotal)} ج.م</div></div>
+  `;
+  wrap.appendChild(grid);
+
+  if(next){
+    const nc = document.createElement('div');
+    nc.className = 'banner ' + (next.info.overdue ? 'bad' : (next.info.daysLeft <= 5 ? 'warn' : ''));
+    if(!next.info.overdue && next.info.daysLeft > 5){ nc.style.background = 'var(--paper-edge)'; nc.style.color = 'var(--ink)'; }
+    const when = next.info.overdue
+      ? ('متأخر ' + toArabicNum(Math.abs(next.info.daysLeft)) + ' يوم')
+      : (next.info.daysLeft === 0 ? 'النهاردة' : ('بعد ' + toArabicNum(next.info.daysLeft) + ' يوم'));
+    nc.textContent = 'أقرب قسط: ' + next.inst.name + ' — ' + toArabicNum(next.inst.monthly_amount) + ' ج.م — ' + when;
+    wrap.appendChild(nc);
+  }
+
+  // add form
+  const form = document.createElement('div');
+  form.className = 'exp-form';
+  form.innerHTML = `
+    <div class="full"><label>اسم القسط</label><input type="text" id="instName" placeholder="مثلاً: قسط العربية"></div>
+    <div><label>قيمة القسط الشهري</label><input type="number" id="instAmount" placeholder="0"></div>
+    <div><label>عدد الأقساط</label><input type="number" id="instCount" placeholder="مثلاً 24"></div>
+    <div><label>تاريخ أول قسط</label><input type="date" id="instFirst" value="${todayStr()}"></div>
+    <div><label>ملاحظات</label><input type="text" id="instNotes" placeholder="اختياري"></div>
+    <button class="add-exp-btn" id="instAddBtn">إضافة قسط</button>
+  `;
+  wrap.appendChild(form);
+  form.querySelector('#instAddBtn').onclick = async ()=>{
+    const name = form.querySelector('#instName').value.trim();
+    const amount = parseFloat(form.querySelector('#instAmount').value);
+    const count = parseInt(form.querySelector('#instCount').value, 10);
+    const first = form.querySelector('#instFirst').value;
+    const notes = form.querySelector('#instNotes').value.trim();
+    if(!name){ showToast('اكتب اسم القسط الأول'); return; }
+    if(!amount || amount<=0){ showToast('اكتب قيمة القسط الشهري'); return; }
+    if(!count || count<=0){ showToast('اكتب عدد الأقساط'); return; }
+    if(!first){ showToast('اختار تاريخ أول قسط'); return; }
+    try{
+      const { data, error } = await sb.from('installments').insert({
+        name, monthly_amount:amount, total_count:count, first_due:first, notes
+      }).select().single();
+      if(error) throw error;
+      installments.push(data);
+      hideConnError();
+      showToast('اتضاف القسط ✓');
+    }catch(e){ showConnError('تعذر إضافة القسط: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+    render();
+  };
+
+  const title = document.createElement('div');
+  title.className = 'section-title';
+  title.textContent = 'الأقساط';
+  wrap.appendChild(title);
+
+  if(installments.length === 0){
+    const hint = document.createElement('div');
+    hint.className = 'empty-hint';
+    hint.textContent = 'لسه ما ضفتش أقساط';
+    wrap.appendChild(hint);
+    return;
+  }
+
+  const sorted = [...installments].sort((a,b)=>{
+    const ia = instInfo(a), ib = instInfo(b);
+    if(ia.finished !== ib.finished) return ia.finished ? 1 : -1;
+    if(ia.finished) return 0;
+    return ia.nextDue - ib.nextDue;
+  });
+
+  sorted.forEach(inst=>{
+    const info = instInfo(inst);
+    const card = document.createElement('div');
+    card.className = 'inst-card' + (info.overdue ? ' overdue' : '') + (info.finished ? ' done' : '');
+
+    const pct = Math.min(100, Math.round((inst.paid_count / inst.total_count) * 100));
+    const top = document.createElement('div');
+    top.className = 'inst-top';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'inst-name';
+    nameEl.textContent = inst.name;
+    const amtEl = document.createElement('div');
+    amtEl.className = 'inst-amount';
+    amtEl.textContent = toArabicNum(inst.monthly_amount) + ' ج.م / شهر';
+    top.appendChild(nameEl); top.appendChild(amtEl);
+    card.appendChild(top);
+
+    const bar = document.createElement('div');
+    bar.className = 'progress';
+    bar.innerHTML = `<div style="width:${pct}%;background:${info.finished ? 'var(--good)' : 'var(--ink)'}"></div>`;
+    card.appendChild(bar);
+
+    const meta = document.createElement('div');
+    meta.className = 'inst-meta';
+    const lines = [];
+    lines.push('اتدفع ' + toArabicNum(inst.paid_count) + ' من ' + toArabicNum(inst.total_count) + ' قسط');
+    if(info.finished){
+      lines.push('✓ خلص السداد');
+    } else {
+      const lateTxt = info.overdue ? ('<span class="late"> (متأخر ' + toArabicNum(Math.abs(info.daysLeft)) + ' يوم)</span>') : '';
+      lines.push('القسط الجاي: ' + fmtDate(info.nextDue) + lateTxt);
+      lines.push('المتبقي: ' + toArabicNum(info.remainingCount) + ' قسط = ' + toArabicNum(info.remainingAmount) + ' ج.م');
+    }
+    meta.innerHTML = lines.join('<br>');
+    if(inst.notes){
+      const n = document.createElement('div');
+      n.textContent = '📝 ' + inst.notes;
+      meta.appendChild(n);
+    }
+    card.appendChild(meta);
+
+    const actions = document.createElement('div');
+    actions.className = 'inst-actions';
+
+    const setPaid = async (newCount, okMsg)=>{
+      const old = inst.paid_count;
+      inst.paid_count = newCount;
+      try{
+        const { error } = await sb.from('installments').update({ paid_count:newCount }).eq('id', inst.id);
+        if(error) throw error;
+        hideConnError();
+        showToast(okMsg);
+      }catch(e){
+        inst.paid_count = old;
+        showConnError('تعذر تحديث القسط: ' + (e && e.message ? e.message : 'خطأ غير معروف'));
+      }
+      render();
+    };
+
+    if(!info.finished){
+      const payBtn = document.createElement('button');
+      payBtn.className = 'primary';
+      payBtn.textContent = 'تم دفع القسط ✓';
+      payBtn.onclick = ()=> setPaid(inst.paid_count + 1, 'اتسجل دفع القسط ✓');
+      actions.appendChild(payBtn);
+    }
+    if(inst.paid_count > 0){
+      const undoBtn = document.createElement('button');
+      undoBtn.textContent = 'تراجع عن آخر دفعة';
+      undoBtn.onclick = ()=> setPaid(inst.paid_count - 1, 'اتلغت آخر دفعة');
+      actions.appendChild(undoBtn);
+    }
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '✕ حذف';
+    delBtn.dataset.confirming = '0';
+    delBtn.onclick = async ()=>{
+      if(delBtn.dataset.confirming === '1'){
+        clearTimeout(delBtn._t);
+        try{
+          const { error } = await sb.from('installments').delete().eq('id', inst.id);
+          if(error) throw error;
+          installments = installments.filter(x=>x.id !== inst.id);
+          hideConnError();
+          showToast('اتحذف القسط');
+        }catch(e){ showConnError('تعذر حذف القسط: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+        render();
+      } else {
+        delBtn.dataset.confirming = '1';
+        delBtn.textContent = 'متأكد؟ دوس تاني';
+        delBtn._t = setTimeout(()=>{ delBtn.dataset.confirming='0'; delBtn.textContent='✕ حذف'; }, 4000);
+      }
+    };
+    actions.appendChild(delBtn);
+    card.appendChild(actions);
+
+    wrap.appendChild(card);
+  });
+}
+
 /* ---------------- FAMILY CHAT ---------------- */
 function renderChat(wrap){
   const list = document.createElement('div');
@@ -1814,7 +2084,7 @@ async function bootApp(){
   await loadChatMessages();
   subscribeChatMessages();
   requestNotifyPermission();
-  if(myRole==='admin'){ await loadMonth(); } else { render(); }
+  if(myRole==='admin'){ await loadInstallments(); await loadMonth(); } else { render(); }
 }
 
 function showLogin(errMsg){
