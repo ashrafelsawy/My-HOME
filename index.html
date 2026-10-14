@@ -179,6 +179,19 @@
   }
   .inst-actions button.primary{ background:var(--ink); color:var(--paper); }
 
+  .occ-card{
+    display:flex; align-items:center; gap:10px;
+    background:#fff; border:1px solid var(--line); border-radius:12px;
+    padding:10px 12px; margin-bottom:8px;
+  }
+  .occ-card.today{ background:linear-gradient(135deg,#FBF0D9,#F6E0B0); border-color:var(--warn); }
+  .occ-card.soon{ border-color:var(--warn); }
+  .occ-icon{ font-size:26px; flex:none; }
+  .occ-main{ flex:1; min-width:0; }
+  .occ-title{ font-weight:700; font-size:14px; }
+  .occ-sub{ font-size:12px; color:var(--ink-soft); margin-top:2px; line-height:1.6; }
+  .occ-days{ font-family:'Courier New',monospace; font-weight:700; font-size:12px; white-space:nowrap; text-align:center; }
+
   .quick-actions{ display:flex; gap:10px; margin:4px 0 14px; }
   .quick-actions button{
     flex:1;
@@ -606,11 +619,11 @@
     border-radius:16px;
     display:flex;
     box-shadow:0 8px 20px rgba(0,0,0,.25);
-    overflow:hidden;
+    overflow-x:auto;
+    scrollbar-width:none;
   }
   .nav-btn{
-    flex:1;
-    min-width:0;
+    flex:1 0 56px;
     background:none;
     border:none;
     color:#C9C2B4;
@@ -709,12 +722,14 @@ const TABS = [
   { id:'requests', icon:'🙋', label:'الطلبات', title:'طلبات البيت' },
   { id:'chat', icon:'💬', label:'الشات', title:'شات العيلة' },
   { id:'installments', icon:'📅', label:'الأقساط', title:'الأقساط' },
+  { id:'occasions', icon:'🎉', label:'المناسبات', title:'المناسبات القريبة' },
 ];
 
-const KID_ALLOWED_TABS = ['requests','chat'];
+const KID_ALLOWED_TABS = ['requests','chat','occasions'];
 
 let chatMessages = [];
 let installments = [];
+let occasions = [];
 let chatChannel = null;
 
 let current = new Date();
@@ -1035,6 +1050,7 @@ function render(){
   else if(activeTab==='requests') renderRequests(wrap);
   else if(activeTab==='chat') renderChat(wrap);
   else if(activeTab==='installments') renderInstallments(wrap);
+  else if(activeTab==='occasions') renderOccasions(wrap);
   else renderShopping(wrap);
 }
 
@@ -1051,6 +1067,7 @@ function renderNav(){
       if(t.id==='requests'){ await loadFamilyRequests(); }
       if(t.id==='chat'){ await loadChatMessages(); }
       if(t.id==='installments'){ await loadInstallments(); }
+      if(t.id==='occasions'){ await loadOccasions(); }
       render();
     };
     nav.appendChild(btn);
@@ -1104,6 +1121,16 @@ function renderHome(wrap){
       <div class="card-value ${nextInst.info.overdue ? 'bad' : (nextInst.info.daysLeft <= 5 ? 'warn' : '')}" style="font-size:16px;"></div>`;
     ic.querySelector('.card-value').textContent = nextInst.inst.name + ' — ' + toArabicNum(nextInst.inst.monthly_amount) + ' ج.م — ' + when;
     wrap.appendChild(ic);
+  }
+
+  const nextOcc = sortedOccasions()[0];
+  if(nextOcc){
+    const oc = document.createElement('div');
+    oc.className = 'card';
+    const kind = OCC_KINDS[nextOcc.o.kind] || OCC_KINDS.other;
+    oc.innerHTML = `<div class="card-label">أقرب مناسبة</div><div class="card-value" style="font-size:16px;"></div>`;
+    oc.querySelector('.card-value').textContent = kind.icon + ' ' + nextOcc.o.title + ' — ' + occWhen(nextOcc.info);
+    wrap.appendChild(oc);
   }
 
   const todayTotal = state.expenses.filter(e=>e.date===todayStr()).reduce((s,e)=>s+(Number(e.amount)||0),0);
@@ -2012,6 +2039,174 @@ function renderInstallments(wrap){
   });
 }
 
+
+/* ---------------- OCCASIONS (الكل يشوف، الأدمن يعدّل) ---------------- */
+const OCC_KINDS = {
+  birthday: { icon:'🎂', label:'عيد ميلاد' },
+  anniversary: { icon:'💍', label:'عيد زواج' },
+  other: { icon:'🎉', label:'مناسبة' },
+};
+
+async function loadOccasions(){
+  try{
+    const { data, error } = await sb.from('occasions').select('*');
+    if(error) throw error;
+    occasions = data || [];
+    hideConnError();
+  }catch(e){
+    occasions = [];
+    showConnError('تعذر تحميل المناسبات: ' + (e && e.message ? e.message : 'خطأ غير معروف'));
+  }
+}
+
+function occInfo(o){
+  const { y, m, d } = parseDateOnly(o.event_date);
+  const today = startOfToday();
+  const make = (year)=>{
+    const last = new Date(year, m+1, 0).getDate();
+    return new Date(year, m, Math.min(d, last));
+  };
+  let next = make(today.getFullYear());
+  if(next < today) next = make(today.getFullYear()+1);
+  const daysLeft = Math.round((next - today) / 86400000);
+  const years = o.has_year ? (next.getFullYear() - y) : null;
+  return { next, daysLeft, years };
+}
+
+function occWhen(info){
+  if(info.daysLeft === 0) return 'النهاردة 🎉';
+  if(info.daysLeft === 1) return 'بكرة';
+  return 'بعد ' + toArabicNum(info.daysLeft) + ' يوم';
+}
+
+function occYearsText(o, info){
+  if(info.years === null || info.years <= 0) return '';
+  if(o.kind === 'birthday') return 'هيتم ' + toArabicNum(info.years) + ' سنة';
+  if(o.kind === 'anniversary') return toArabicNum(info.years) + ' سنة على الجواز';
+  return toArabicNum(info.years) + ' سنة';
+}
+
+function sortedOccasions(){
+  return occasions.map(o=>({ o, info: occInfo(o) })).sort((a,b)=> a.info.daysLeft - b.info.daysLeft);
+}
+
+function announceTodayOccasions(){
+  const todays = sortedOccasions().filter(x=>x.info.daysLeft === 0);
+  if(todays.length === 0) return;
+  const names = todays.map(x=>x.o.title).join(' و ');
+  setTimeout(()=> showBlessing('النهاردة: ' + names + ' 🎉'), 900);
+}
+
+function renderOccasions(wrap){
+  const isAdmin = myRole === 'admin';
+
+  if(isAdmin){
+    const form = document.createElement('div');
+    form.className = 'exp-form';
+    form.innerHTML = `
+      <div><label>النوع</label>
+        <select id="occKind">
+          <option value="birthday">🎂 عيد ميلاد</option>
+          <option value="anniversary">💍 عيد زواج</option>
+          <option value="other">🎉 مناسبة أخرى</option>
+        </select></div>
+      <div><label>التاريخ</label><input type="date" id="occDate"></div>
+      <div class="full"><label>الاسم / الوصف</label><input type="text" id="occTitle" placeholder="مثلاً: عيد ميلاد سلمى"></div>
+      <div class="full" style="display:flex;align-items:center;gap:6px;">
+        <input type="checkbox" id="occHasYear" checked style="width:auto;">
+        <label for="occHasYear" style="margin:0;">السنة معروفة (عشان أحسب العمر / السنين)</label>
+      </div>
+      <button class="add-exp-btn" id="occAddBtn">إضافة مناسبة</button>
+    `;
+    wrap.appendChild(form);
+    form.querySelector('#occAddBtn').onclick = async ()=>{
+      const kind = form.querySelector('#occKind').value;
+      const date = form.querySelector('#occDate').value;
+      const title = form.querySelector('#occTitle').value.trim();
+      const hasYear = form.querySelector('#occHasYear').checked;
+      if(!title){ showToast('اكتب الاسم أو الوصف الأول'); return; }
+      if(!date){ showToast('اختار التاريخ'); return; }
+      try{
+        const { data, error } = await sb.from('occasions').insert({
+          kind, title, event_date:date, has_year:hasYear
+        }).select().single();
+        if(error) throw error;
+        occasions.push(data);
+        hideConnError();
+        showToast('اتضافت المناسبة ✓');
+      }catch(e){ showConnError('تعذر إضافة المناسبة: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+      render();
+    };
+  }
+
+  const title = document.createElement('div');
+  title.className = 'section-title';
+  title.textContent = 'الجاية قريب';
+  wrap.appendChild(title);
+
+  const list = sortedOccasions();
+  if(list.length === 0){
+    const hint = document.createElement('div');
+    hint.className = 'empty-hint';
+    hint.textContent = isAdmin ? 'لسه ما ضفتش مناسبات' : 'مفيش مناسبات متسجلة لسه';
+    wrap.appendChild(hint);
+    return;
+  }
+
+  list.forEach(({ o, info })=>{
+    const kind = OCC_KINDS[o.kind] || OCC_KINDS.other;
+    const card = document.createElement('div');
+    card.className = 'occ-card' + (info.daysLeft === 0 ? ' today' : (info.daysLeft <= 7 ? ' soon' : ''));
+
+    const icon = document.createElement('div');
+    icon.className = 'occ-icon';
+    icon.textContent = kind.icon;
+
+    const main = document.createElement('div');
+    main.className = 'occ-main';
+    const t = document.createElement('div');
+    t.className = 'occ-title';
+    t.textContent = o.title;
+    const sub = document.createElement('div');
+    sub.className = 'occ-sub';
+    const yrs = occYearsText(o, info);
+    sub.textContent = fmtDate(info.next) + (yrs ? ' — ' + yrs : '');
+    main.appendChild(t); main.appendChild(sub);
+
+    const days = document.createElement('div');
+    days.className = 'occ-days';
+    days.textContent = occWhen(info);
+
+    card.appendChild(icon); card.appendChild(main); card.appendChild(days);
+
+    if(isAdmin){
+      const del = document.createElement('button');
+      del.className = 'del';
+      del.textContent = '✕';
+      del.dataset.confirming = '0';
+      del.onclick = async ()=>{
+        if(del.dataset.confirming === '1'){
+          clearTimeout(del._t);
+          try{
+            const { error } = await sb.from('occasions').delete().eq('id', o.id);
+            if(error) throw error;
+            occasions = occasions.filter(x=>x.id !== o.id);
+            hideConnError();
+            showToast('اتحذفت المناسبة');
+          }catch(e){ showConnError('تعذر حذف المناسبة: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+          render();
+        } else {
+          del.dataset.confirming = '1';
+          del.textContent = 'متأكد؟';
+          del._t = setTimeout(()=>{ del.dataset.confirming='0'; del.textContent='✕'; }, 4000);
+        }
+      };
+      card.appendChild(del);
+    }
+    wrap.appendChild(card);
+  });
+}
+
 /* ---------------- FAMILY CHAT ---------------- */
 function renderChat(wrap){
   const list = document.createElement('div');
@@ -2084,7 +2279,9 @@ async function bootApp(){
   await loadChatMessages();
   subscribeChatMessages();
   requestNotifyPermission();
+  await loadOccasions();
   if(myRole==='admin'){ await loadInstallments(); await loadMonth(); } else { render(); }
+  announceTodayOccasions();
 }
 
 function showLogin(errMsg){
