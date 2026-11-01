@@ -192,6 +192,29 @@
   .occ-sub{ font-size:12px; color:var(--ink-soft); margin-top:2px; line-height:1.6; }
   .occ-days{ font-family:'Courier New',monospace; font-weight:700; font-size:12px; white-space:nowrap; text-align:center; }
 
+  .maint-card{
+    background:#fff; border:1px solid var(--line); border-radius:12px;
+    padding:12px; margin-bottom:10px;
+  }
+  .maint-card.overdue{ border-color:var(--bad); background:#FDF3F1; }
+  .maint-card.soon{ border-color:var(--warn); }
+  .maint-top{ display:flex; align-items:flex-start; gap:10px; }
+  .maint-icon{ font-size:24px; flex:none; }
+  .maint-main{ flex:1; min-width:0; }
+  .maint-title{ font-weight:700; font-size:14px; }
+  .maint-sub{ font-size:12px; color:var(--ink-soft); margin-top:3px; line-height:1.7; }
+  .maint-sub .late{ color:var(--bad); font-weight:700; }
+  .maint-cost{ font-family:'Courier New',monospace; font-weight:700; font-size:13px; white-space:nowrap; }
+  .maint-done-form{ display:none; grid-template-columns:1fr 1fr; gap:6px; margin-top:10px; }
+  .maint-done-form input{
+    width:100%; border:1px solid var(--line); border-radius:6px; padding:6px 8px;
+    font-size:13px; font-family:inherit; background:#fff; color:var(--ink);
+  }
+  .maint-done-form button{
+    grid-column:1 / -1; border:none; background:var(--ink); color:var(--paper);
+    border-radius:6px; padding:8px; font-size:13px; cursor:pointer;
+  }
+
   .quick-actions{ display:flex; gap:10px; margin:4px 0 14px; }
   .quick-actions button{
     flex:1;
@@ -723,6 +746,7 @@ const TABS = [
   { id:'chat', icon:'💬', label:'الشات', title:'شات العيلة' },
   { id:'installments', icon:'📅', label:'الأقساط', title:'الأقساط' },
   { id:'occasions', icon:'🎉', label:'المناسبات', title:'المناسبات القريبة' },
+  { id:'maintenance', icon:'🔧', label:'الصيانة', title:'الصيانة' },
 ];
 
 const KID_ALLOWED_TABS = ['requests','chat','occasions'];
@@ -730,6 +754,7 @@ const KID_ALLOWED_TABS = ['requests','chat','occasions'];
 let chatMessages = [];
 let installments = [];
 let occasions = [];
+let maintenance = [];
 let chatChannel = null;
 
 let current = new Date();
@@ -1051,6 +1076,7 @@ function render(){
   else if(activeTab==='chat') renderChat(wrap);
   else if(activeTab==='installments') renderInstallments(wrap);
   else if(activeTab==='occasions') renderOccasions(wrap);
+  else if(activeTab==='maintenance') renderMaintenance(wrap);
   else renderShopping(wrap);
 }
 
@@ -1068,6 +1094,7 @@ function renderNav(){
       if(t.id==='chat'){ await loadChatMessages(); }
       if(t.id==='installments'){ await loadInstallments(); }
       if(t.id==='occasions'){ await loadOccasions(); }
+      if(t.id==='maintenance'){ await loadMaintenance(); }
       render();
     };
     nav.appendChild(btn);
@@ -1131,6 +1158,17 @@ function renderHome(wrap){
     oc.innerHTML = `<div class="card-label">أقرب مناسبة</div><div class="card-value" style="font-size:16px;"></div>`;
     oc.querySelector('.card-value').textContent = kind.icon + ' ' + nextOcc.o.title + ' — ' + occWhen(nextOcc.info);
     wrap.appendChild(oc);
+  }
+
+  const nextMaint = nextMaintenanceOverall();
+  if(nextMaint){
+    const mc = document.createElement('div');
+    mc.className = 'card';
+    const mcat = MAINT_CATS[nextMaint.sc.category] || MAINT_CATS.other;
+    mc.innerHTML = `<div class="card-label">الصيانة الجاية</div>
+      <div class="card-value ${nextMaint.info.overdue ? 'bad' : (nextMaint.info.daysLeft <= 7 ? 'warn' : '')}" style="font-size:16px;"></div>`;
+    mc.querySelector('.card-value').textContent = mcat.icon + ' ' + nextMaint.sc.title + ' — ' + maintWhen(nextMaint.info);
+    wrap.appendChild(mc);
   }
 
   const todayTotal = state.expenses.filter(e=>e.date===todayStr()).reduce((s,e)=>s+(Number(e.amount)||0),0);
@@ -2207,6 +2245,292 @@ function renderOccasions(wrap){
   });
 }
 
+
+/* ---------------- MAINTENANCE (admin only) ---------------- */
+const MAINT_CATS = {
+  ac:        { icon:'❄️', label:'تكييف' },
+  plumbing:  { icon:'🚰', label:'سباكة' },
+  electric:  { icon:'💡', label:'كهرباء' },
+  car:       { icon:'🚗', label:'عربية' },
+  appliance: { icon:'🔧', label:'أجهزة' },
+  filter:    { icon:'💧', label:'فلتر مياه' },
+  gas:       { icon:'🔥', label:'غاز / سخان' },
+  other:     { icon:'🛠️', label:'أخرى' },
+};
+
+async function loadMaintenance(){
+  try{
+    const { data, error } = await sb.from('maintenance').select('*');
+    if(error) throw error;
+    maintenance = data || [];
+    hideConnError();
+  }catch(e){
+    maintenance = [];
+    showConnError('تعذر تحميل الصيانة: ' + (e && e.message ? e.message : 'خطأ غير معروف'));
+  }
+}
+
+function dateToStr(d){
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function addMonthsStr(dateStr, n){
+  const { y, m, d } = parseDateOnly(dateStr);
+  const t = new Date(y, m + n, 1);
+  const last = new Date(t.getFullYear(), t.getMonth()+1, 0).getDate();
+  t.setDate(Math.min(d, last));
+  return dateToStr(t);
+}
+function schedInfo(sc){
+  const { y, m, d } = parseDateOnly(sc.next_due);
+  const due = new Date(y, m, d);
+  const daysLeft = Math.round((due - startOfToday()) / 86400000);
+  return { due, daysLeft, overdue: daysLeft < 0 };
+}
+function maintWhen(info){
+  if(info.overdue) return 'متأخر ' + toArabicNum(Math.abs(info.daysLeft)) + ' يوم';
+  if(info.daysLeft === 0) return 'النهاردة';
+  if(info.daysLeft === 1) return 'بكرة';
+  return 'بعد ' + toArabicNum(info.daysLeft) + ' يوم';
+}
+function nextMaintenanceOverall(){
+  let best = null;
+  maintenance.filter(x=>x.kind==='schedule' && x.next_due).forEach(sc=>{
+    const info = schedInfo(sc);
+    if(!best || info.daysLeft < best.info.daysLeft) best = { sc, info };
+  });
+  return best;
+}
+function confirmDeleteButton(label, onDo){
+  const btn = document.createElement('button');
+  btn.textContent = label;
+  btn.dataset.confirming = '0';
+  btn.onclick = ()=>{
+    if(btn.dataset.confirming === '1'){ clearTimeout(btn._t); onDo(); }
+    else {
+      btn.dataset.confirming = '1';
+      btn.textContent = 'متأكد؟ دوس تاني';
+      btn._t = setTimeout(()=>{ btn.dataset.confirming='0'; btn.textContent=label; }, 4000);
+    }
+  };
+  return btn;
+}
+
+function renderMaintenance(wrap){
+  const schedules = maintenance.filter(x=>x.kind==='schedule' && x.next_due)
+    .map(sc=>({ sc, info: schedInfo(sc) })).sort((a,b)=> a.info.daysLeft - b.info.daysLeft);
+  const jobs = maintenance.filter(x=>x.kind==='job')
+    .sort((a,b)=> String(b.done_on||'').localeCompare(String(a.done_on||'')));
+
+  if(schedules.length){
+    const first = schedules[0];
+    const nb = document.createElement('div');
+    nb.className = 'banner ' + (first.info.overdue ? 'bad' : (first.info.daysLeft <= 7 ? 'warn' : ''));
+    if(!first.info.overdue && first.info.daysLeft > 7){ nb.style.background='var(--paper-edge)'; nb.style.color='var(--ink)'; }
+    nb.textContent = 'أقرب صيانة: ' + first.sc.title + ' — ' + maintWhen(first.info);
+    wrap.appendChild(nb);
+  }
+
+  // ---- add form ----
+  const catOptions = Object.keys(MAINT_CATS).map(k=>`<option value="${k}">${MAINT_CATS[k].icon} ${MAINT_CATS[k].label}</option>`).join('');
+  const form = document.createElement('div');
+  form.className = 'exp-form';
+  form.innerHTML = `
+    <div><label>النوع</label>
+      <select id="mKind">
+        <option value="schedule">🔁 صيانة دورية (متكررة)</option>
+        <option value="job">🧾 عطل / إصلاح تم</option>
+      </select></div>
+    <div><label>القسم</label><select id="mCat">${catOptions}</select></div>
+    <div class="full"><label>الوصف</label><input type="text" id="mTitle" placeholder="مثلاً: تنظيف التكييف"></div>
+    <div class="full" id="mSchedFields" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div><label>تتكرر كل (شهر)</label><input type="number" id="mInterval" placeholder="مثلاً 6"></div>
+      <div><label>ميعاد الصيانة الجاي</label><input type="date" id="mNextDue" value="${todayStr()}"></div>
+    </div>
+    <div class="full" id="mJobFields" style="display:none;grid-template-columns:1fr 1fr;gap:8px;">
+      <div><label>تاريخ الإصلاح</label><input type="date" id="mDoneOn" value="${todayStr()}"></div>
+      <div><label>التكلفة</label><input type="number" id="mCost" placeholder="0"></div>
+      <div><label>الفني / المكان</label><input type="text" id="mWho" placeholder="اختياري"></div>
+      <div><label>ملاحظات</label><input type="text" id="mNotes" placeholder="اختياري"></div>
+    </div>
+    <button class="add-exp-btn" id="mAddBtn">إضافة</button>
+  `;
+  wrap.appendChild(form);
+  const kindSel = form.querySelector('#mKind');
+  const schedBox = form.querySelector('#mSchedFields');
+  const jobBox = form.querySelector('#mJobFields');
+  kindSel.onchange = ()=>{
+    const isSched = kindSel.value === 'schedule';
+    schedBox.style.display = isSched ? 'grid' : 'none';
+    jobBox.style.display = isSched ? 'none' : 'grid';
+  };
+  form.querySelector('#mAddBtn').onclick = async ()=>{
+    const kind = kindSel.value;
+    const category = form.querySelector('#mCat').value;
+    const title = form.querySelector('#mTitle').value.trim();
+    if(!title){ showToast('اكتب وصف الصيانة الأول'); return; }
+    let row;
+    if(kind === 'schedule'){
+      const interval = parseInt(form.querySelector('#mInterval').value, 10);
+      const nextDue = form.querySelector('#mNextDue').value;
+      if(!interval || interval <= 0){ showToast('اكتب تتكرر كل كام شهر'); return; }
+      if(!nextDue){ showToast('اختار ميعاد الصيانة الجاي'); return; }
+      row = { kind, title, category, interval_months:interval, next_due:nextDue };
+    } else {
+      const doneOn = form.querySelector('#mDoneOn').value;
+      if(!doneOn){ showToast('اختار تاريخ الإصلاح'); return; }
+      row = {
+        kind, title, category, done_on:doneOn,
+        cost: parseFloat(form.querySelector('#mCost').value) || 0,
+        who: form.querySelector('#mWho').value.trim(),
+        notes: form.querySelector('#mNotes').value.trim(),
+      };
+    }
+    try{
+      const { data, error } = await sb.from('maintenance').insert(row).select().single();
+      if(error) throw error;
+      maintenance.push(data);
+      hideConnError();
+      showToast('اتسجلت الصيانة ✓');
+    }catch(e){ showConnError('تعذر إضافة الصيانة: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+    render();
+  };
+
+  // ---- schedules ----
+  const t1 = document.createElement('div');
+  t1.className = 'section-title';
+  t1.textContent = 'الصيانة الدورية';
+  wrap.appendChild(t1);
+  if(schedules.length === 0){
+    const h = document.createElement('div');
+    h.className = 'empty-hint';
+    h.textContent = 'لسه ما ضفتش صيانة دورية';
+    wrap.appendChild(h);
+  }
+  schedules.forEach(({ sc, info })=>{
+    const cat = MAINT_CATS[sc.category] || MAINT_CATS.other;
+    const card = document.createElement('div');
+    card.className = 'maint-card' + (info.overdue ? ' overdue' : (info.daysLeft <= 7 ? ' soon' : ''));
+
+    const top = document.createElement('div');
+    top.className = 'maint-top';
+    const icon = document.createElement('div'); icon.className='maint-icon'; icon.textContent = cat.icon;
+    const main = document.createElement('div'); main.className='maint-main';
+    const tt = document.createElement('div'); tt.className='maint-title'; tt.textContent = sc.title;
+    const sub = document.createElement('div'); sub.className='maint-sub';
+    const lines = [];
+    lines.push('كل ' + toArabicNum(sc.interval_months) + ' شهر');
+    lines.push('الميعاد الجاي: ' + fmtDate(info.due) + ' — ' + (info.overdue ? '<span class="late">' + maintWhen(info) + '</span>' : maintWhen(info)));
+    if(sc.last_done){ const { y, m, d } = parseDateOnly(sc.last_done); lines.push('آخر مرة: ' + fmtDate(new Date(y, m, d))); }
+    sub.innerHTML = lines.join('<br>');
+    main.appendChild(tt); main.appendChild(sub);
+    top.appendChild(icon); top.appendChild(main);
+    card.appendChild(top);
+
+    const actions = document.createElement('div');
+    actions.className = 'inst-actions';
+    const doneBtn = document.createElement('button');
+    doneBtn.className = 'primary';
+    doneBtn.textContent = 'تمت الصيانة ✓';
+    actions.appendChild(doneBtn);
+    actions.appendChild(confirmDeleteButton('✕ حذف', async ()=>{
+      try{
+        const { error } = await sb.from('maintenance').delete().eq('id', sc.id);
+        if(error) throw error;
+        maintenance = maintenance.filter(x=>x.id !== sc.id);
+        hideConnError(); showToast('اتحذفت');
+      }catch(e){ showConnError('تعذر الحذف: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+      render();
+    }));
+    card.appendChild(actions);
+
+    const doneForm = document.createElement('div');
+    doneForm.className = 'maint-done-form';
+    doneForm.innerHTML = `
+      <input type="number" class="dCost" placeholder="التكلفة (اختياري)">
+      <input type="text" class="dWho" placeholder="الفني / المكان (اختياري)">
+      <button>تأكيد التسجيل</button>
+    `;
+    card.appendChild(doneForm);
+    doneBtn.onclick = ()=>{ doneForm.style.display = doneForm.style.display === 'grid' ? 'none' : 'grid'; };
+    doneForm.querySelector('button').onclick = async ()=>{
+      const cost = parseFloat(doneForm.querySelector('.dCost').value) || 0;
+      const who = doneForm.querySelector('.dWho').value.trim();
+      const today = todayStr();
+      const newNext = addMonthsStr(today, sc.interval_months);
+      try{
+        const up = await sb.from('maintenance').update({ last_done:today, next_due:newNext }).eq('id', sc.id);
+        if(up.error) throw up.error;
+        sc.last_done = today; sc.next_due = newNext;
+        const ins = await sb.from('maintenance').insert({
+          kind:'job', title:sc.title, category:sc.category, done_on:today, cost, who, notes:'صيانة دورية'
+        }).select().single();
+        if(ins.error) throw ins.error;
+        maintenance.push(ins.data);
+        hideConnError();
+        showToast('اتسجلت الصيانة والميعاد الجاي اتحدد ✓');
+      }catch(e){ showConnError('تعذر تسجيل الصيانة: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+      render();
+    };
+    wrap.appendChild(card);
+  });
+
+  // ---- job log ----
+  const t2 = document.createElement('div');
+  t2.className = 'section-title';
+  t2.textContent = 'سجل الصيانة والإصلاحات';
+  wrap.appendChild(t2);
+
+  const year = new Date().getFullYear();
+  const totalAll = jobs.reduce((s,j)=> s + (Number(j.cost)||0), 0);
+  const totalYear = jobs.filter(j=> j.done_on && parseDateOnly(j.done_on).y === year).reduce((s,j)=> s + (Number(j.cost)||0), 0);
+  const grid = document.createElement('div');
+  grid.className = 'card-grid';
+  grid.style.marginBottom = '10px';
+  grid.innerHTML = `
+    <div class="card"><div class="card-label">تكلفة السنة دي</div><div class="card-value">${toArabicNum(totalYear)} ج.م</div></div>
+    <div class="card"><div class="card-label">الإجمالي</div><div class="card-value">${toArabicNum(totalAll)} ج.م</div></div>
+  `;
+  wrap.appendChild(grid);
+
+  if(jobs.length === 0){
+    const h = document.createElement('div');
+    h.className = 'empty-hint';
+    h.textContent = 'مفيش إصلاحات متسجلة لسه';
+    wrap.appendChild(h);
+    return;
+  }
+  jobs.forEach(j=>{
+    const cat = MAINT_CATS[j.category] || MAINT_CATS.other;
+    const row = document.createElement('div');
+    row.className = 'tx-row';
+    const dot = document.createElement('span'); dot.style.fontSize='18px'; dot.textContent = cat.icon;
+    const main = document.createElement('div'); main.className='tx-main';
+    const tt = document.createElement('div'); tt.className='tx-title'; tt.textContent = j.title;
+    const sub = document.createElement('div'); sub.className='tx-sub';
+    const parts = [];
+    if(j.done_on){ const { y, m, d } = parseDateOnly(j.done_on); parts.push(fmtDate(new Date(y, m, d))); }
+    if(j.who) parts.push(j.who);
+    if(j.notes) parts.push(j.notes);
+    sub.textContent = parts.join(' · ');
+    main.appendChild(tt); main.appendChild(sub);
+    const cost = document.createElement('div'); cost.className='maint-cost';
+    cost.textContent = Number(j.cost) ? (toArabicNum(j.cost) + ' ج.م') : '';
+    row.appendChild(dot); row.appendChild(main); row.appendChild(cost);
+    const del = confirmDeleteButton('✕', async ()=>{
+      try{
+        const { error } = await sb.from('maintenance').delete().eq('id', j.id);
+        if(error) throw error;
+        maintenance = maintenance.filter(x=>x.id !== j.id);
+        hideConnError(); showToast('اتحذف من السجل');
+      }catch(e){ showConnError('تعذر الحذف: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+      render();
+    });
+    del.className = 'del';
+    row.appendChild(del);
+    wrap.appendChild(row);
+  });
+}
+
 /* ---------------- FAMILY CHAT ---------------- */
 function renderChat(wrap){
   const list = document.createElement('div');
@@ -2280,7 +2604,7 @@ async function bootApp(){
   subscribeChatMessages();
   requestNotifyPermission();
   await loadOccasions();
-  if(myRole==='admin'){ await loadInstallments(); await loadMonth(); } else { render(); }
+  if(myRole==='admin'){ await loadInstallments(); await loadMaintenance(); await loadMonth(); } else { render(); }
   announceTodayOccasions();
 }
 
