@@ -219,6 +219,18 @@
   .fit-chart{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:8px; margin-bottom:12px; }
   .fit-chart svg{ width:100%; height:auto; display:block; }
 
+  .nav-btn{ position:relative; }
+  .nav-dot{ position:absolute; top:6px; left:50%; margin-left:9px; width:8px; height:8px; border-radius:50%; background:#E5483A; }
+  .more-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .more-tile{
+    position:relative; background:#fff; border:1px solid var(--line); border-radius:14px;
+    padding:16px 4px 12px; text-align:center; cursor:pointer; font-family:inherit; color:var(--ink);
+  }
+  .more-tile:active{ background:var(--paper-edge); }
+  .more-tile .mi{ font-size:30px; display:block; line-height:1.2; }
+  .more-tile .ml{ font-size:12px; font-weight:700; display:block; margin-top:6px; }
+  .tile-dot{ position:absolute; top:8px; right:8px; width:9px; height:9px; border-radius:50%; background:#E5483A; }
+
   .quick-actions{ display:flex; gap:10px; margin:4px 0 14px; }
   .quick-actions button{
     flex:1;
@@ -1072,13 +1084,38 @@ function expensesTotal(list){ return (list||state.expenses).reduce((s,e)=> s+(Nu
 function actualSpentTotal(){ return shoppingBoughtTotal() + expensesTotal(); }
 function catInfo(id){ return EXPENSE_CATS.find(c=>c.id===id) || EXPENSE_CATS[EXPENSE_CATS.length-1]; }
 
+const PRIMARY_TABS_ADMIN = ['home','expenses','shopping','requests'];
+const SECONDARY_TABS_ADMIN = ['budget','chat','installments','occasions','maintenance','fitness'];
+const MORE_TAB = { id:'more', icon:'☰', label:'المزيد', title:'المزيد' };
+
+function tabAlert(id){
+  if(id==='installments') return installments.some(i=>{ const inf = instInfo(i); return !inf.finished && inf.overdue; });
+  if(id==='maintenance') return maintenance.some(x=> x.kind==='schedule' && x.next_due && schedInfo(x).overdue);
+  if(id==='occasions') return sortedOccasions().some(x=> x.info.daysLeft === 0);
+  return false;
+}
+function moreHasAlerts(){ return SECONDARY_TABS_ADMIN.some(tabAlert); }
+
+async function goTab(id){
+  activeTab = id;
+  if(id==='requests'){ await loadFamilyRequests(); }
+  if(id==='chat'){ await loadChatMessages(); }
+  if(id==='installments'){ await loadInstallments(); }
+  if(id==='occasions'){ await loadOccasions(); }
+  if(id==='maintenance'){ await loadMaintenance(); }
+  if(id==='fitness'){ await loadFitness(); }
+  render();
+}
+
 function render(){
   if(myRole==='kid' && !KID_ALLOWED_TABS.includes(activeTab)) activeTab='requests';
-  document.getElementById('tabTitle').textContent = TABS.find(t=>t.id===activeTab).title;
+  const tabObj = activeTab==='more' ? MORE_TAB : (TABS.find(t=>t.id===activeTab) || TABS[0]);
+  document.getElementById('tabTitle').textContent = tabObj.title;
   renderNav();
   const wrap = document.getElementById('tabContent');
   wrap.innerHTML = '';
   if(activeTab==='home') renderHome(wrap);
+  else if(activeTab==='more') renderMore(wrap);
   else if(activeTab==='expenses') renderExpenses(wrap);
   else if(activeTab==='budget') renderBudget(wrap);
   else if(activeTab==='requests') renderRequests(wrap);
@@ -1093,23 +1130,36 @@ function render(){
 function renderNav(){
   const nav = document.getElementById('bottomNav');
   nav.innerHTML = '';
-  const visibleTabs = myRole==='admin' ? TABS : TABS.filter(t=>KID_ALLOWED_TABS.includes(t.id));
-  visibleTabs.forEach(t=>{
+  let items;
+  if(myRole==='admin'){
+    items = PRIMARY_TABS_ADMIN.map(id=> TABS.find(t=>t.id===id)).concat([MORE_TAB]);
+  } else {
+    items = TABS.filter(t=>KID_ALLOWED_TABS.includes(t.id));
+  }
+  items.forEach(t=>{
+    const isActive = t.id===activeTab || (t.id==='more' && SECONDARY_TABS_ADMIN.includes(activeTab));
+    const alert = t.id==='more' ? moreHasAlerts() : tabAlert(t.id);
     const btn = document.createElement('button');
-    btn.className = 'nav-btn' + (activeTab===t.id ? ' active' : '');
-    btn.innerHTML = '<span class="nav-icon">'+t.icon+'</span><span>'+t.label+'</span>';
-    btn.onclick = async ()=>{
-      activeTab = t.id;
-      if(t.id==='requests'){ await loadFamilyRequests(); }
-      if(t.id==='chat'){ await loadChatMessages(); }
-      if(t.id==='installments'){ await loadInstallments(); }
-      if(t.id==='occasions'){ await loadOccasions(); }
-      if(t.id==='maintenance'){ await loadMaintenance(); }
-      if(t.id==='fitness'){ await loadFitness(); }
-      render();
-    };
+    btn.className = 'nav-btn' + (isActive ? ' active' : '');
+    btn.innerHTML = '<span class="nav-icon">'+t.icon+'</span><span>'+t.label+'</span>' + (alert ? '<span class="nav-dot"></span>' : '');
+    btn.onclick = ()=> goTab(t.id);
     nav.appendChild(btn);
   });
+}
+
+function renderMore(wrap){
+  const grid = document.createElement('div');
+  grid.className = 'more-grid';
+  SECONDARY_TABS_ADMIN.forEach(id=>{
+    const t = TABS.find(x=>x.id===id);
+    if(!t) return;
+    const tile = document.createElement('button');
+    tile.className = 'more-tile';
+    tile.innerHTML = '<span class="mi">'+t.icon+'</span><span class="ml">'+t.label+'</span>' + (tabAlert(id) ? '<span class="tile-dot"></span>' : '');
+    tile.onclick = ()=> goTab(id);
+    grid.appendChild(tile);
+  });
+  wrap.appendChild(grid);
 }
 
 /* ---------------- HOME ---------------- */
