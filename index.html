@@ -231,6 +231,19 @@
   .more-tile .ml{ font-size:12px; font-weight:700; display:block; margin-top:6px; }
   .tile-dot{ position:absolute; top:8px; right:8px; width:9px; height:9px; border-radius:50%; background:#E5483A; }
 
+  .plan-group{ background:#fff; border:1px solid var(--line); border-radius:12px; margin-bottom:8px; }
+  .plan-group > summary{ cursor:pointer; padding:12px; font-weight:700; font-size:14px; list-style:none; display:flex; justify-content:space-between; align-items:center; }
+  .plan-group > summary::-webkit-details-marker{ display:none; }
+  .plan-group > summary .cnt{ font-size:11px; font-weight:400; color:var(--ink-soft); }
+  .plan-body{ padding:0 12px 12px; }
+  .plan-ex{ border-top:1px dashed var(--line); padding:10px 0; }
+  .plan-ex-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+  .plan-ex-name{ font-weight:700; font-size:13px; }
+  .plan-ex-target{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+  .plan-ex-meta{ font-size:12px; margin-top:4px; line-height:1.8; }
+  .plan-tip{ background:var(--paper-edge); border-radius:8px; padding:8px 10px; margin-top:8px; font-size:12px; line-height:1.7; }
+  .plan-tip b{ display:block; margin-bottom:2px; }
+
   .quick-actions{ display:flex; gap:10px; margin:4px 0 14px; }
   .quick-actions button{
     flex:1;
@@ -773,6 +786,8 @@ let installments = [];
 let occasions = [];
 let maintenance = [];
 let fitnessLogs = [];
+let fitnessPlan = [];
+const openPlanGroups = new Set();
 let fitnessViewUid = null;
 let myUid = null;
 let chatChannel = null;
@@ -2606,6 +2621,14 @@ async function loadFitness(){
     fitnessLogs = [];
     showConnError('تعذر تحميل بيانات اللياقة: ' + (e && e.message ? e.message : 'خطأ غير معروف'));
   }
+  try{
+    const pl = await sb.from('fitness_plan').select('*').order('sort_order', { ascending:true });
+    if(pl.error) throw pl.error;
+    fitnessPlan = pl.data || [];
+  }catch(e){
+    fitnessPlan = [];
+    showConnError('تعذر تحميل خطة التمارين: ' + (e && e.message ? e.message : 'خطأ غير معروف'));
+  }
 }
 
 function weightChartSvg(points){
@@ -2775,6 +2798,8 @@ function renderFitness(wrap){
     };
   }
 
+  if(viewingSelf) renderFitnessPlan(wrap);
+
   // ---- السجل ----
   const title = document.createElement('div');
   title.className = 'section-title';
@@ -2823,6 +2848,211 @@ function renderFitness(wrap){
     }
     wrap.appendChild(row);
   });
+}
+
+
+/* ---------------- FITNESS PLAN ---------------- */
+const TRAINER_PLAN = [
+  { group:'كتف', exercises:[
+    ['ضغط كتف بالدمبل جالس','الكتف الأمامي والجانبي','4 مجموعات × 8 - 12 تكرار','',''],
+    ['رفرفة جانبي بالدمبل','الكتف الجانبي (العرض)','4 مجموعات × 12 - 15 تكرار','',''],
+    ['سحب الحبل للوجه (فيس بول)','الكتف الخلفي وأعلى الظهر','3 مجموعات × 15 تكرار','',''],
+    ['رفرفة أمامي بالبار','الكتف الأمامي','3 مجموعات × 10 - 12 تكرار','',''],
+    ['رفرفة خلفي على دكة مائلة','الكتف الخلفي','3 مجموعات × 12 - 15 تكرار','',''],
+  ], tips:[] },
+  { group:'صدر', exercises:[
+    ['ضغط بالدمبل على مقعد مائل لأعلى','الصدر العلوي','4 مجموعات × 8 - 10 تكرارات','2 - 3 دقائق','بقاء تكرارين في المفكرة (2 RIR)'],
+    ['ضغط بالبار على مقعد مستوٍ','الصدر الأوسط والكامل','3 مجموعات × 6 - 8 تكرارات','3 دقائق','بقاء تكرارين في المفكرة (2 RIR)'],
+    ['تجميع بالدمبل على مقعد مستوٍ (فلاي)','تمدد ألياف الصدر الوسطى','3 مجموعات × 10 - 12 تكراراً','90 ثانية','بقاء تكرار واحد في المفكرة (1 RIR)'],
+    ['تفتيح كابل من أعلى إلى أسفل','الصدر السفلي والخط المنتصف','3 مجموعات × 12 - 15 تكراراً','60 - 90 ثانية','الوصول للفشل في آخر مجموعة'],
+    ['تمرين المتوازي (Dips)','الصدر السفلي والترايسبس','3 مجموعات × حتى الفشل العضلي','2 دقيقة','الفشل العضلي الفعلي'],
+  ], tips:[
+    ['زاوية مقعد المائل للصدر العلوي','اضبط المقعد على زاوية 30 إلى 45 درجة كحد أقصى؛ الزوايا الأعلى من ذلك تنقل الجهد العضلي مباشرة إلى الكتف الأمامي بدلاً من الصدر.'],
+    ['مسار حركة الكوع أثناء الضغط','حافظ على نزول الدمبل أو البار بزاوية كوع تقارب 45 درجة مع الجذع. تجنب فتح الكوعين للخارج تماماً (زاوية 90) لتفادي حدوث اختناق في أوتار الكتف أو التسبب في إصابات مزمنة.'],
+    ['لوحا الكتف (Scapula Retraction)','قبل البدء في أي حركة ضغط، اسحب لوحي كتفك للخلف وثبّتهما على المقعد لحماية مفصل الروتيتور كاف (Rotator Cuff) وزيادة تفعيل عضلات الصدر.'],
+  ] },
+  { group:'ظهر', exercises:[
+    ['سحب عالي بالبار (الرفعة الميتة / ديدليفت)','الظهر الكامل وأسفل الظهر','3 مجموعات × 5 - 8 تكرارات','3 دقائق','بقاء تكرارين في المفكرة (2 RIR)'],
+    ['سحب أرضي بالبار (بنت أوفر رو)','سمك الظهر ومنتصف الظهر','4 مجموعات × 8 - 10 تكرارات','2 دقيقة','بقاء تكرارين في المفكرة (2 RIR)'],
+    ['سحب عالي واسع بجهاز الكابل (لات بول داون)','عرض الظهر (المجنص)','4 مجموعات × 10 - 12 تكراراً','90 ثانية','بقاء تكرار واحد في المفكرة (1 RIR)'],
+    ['سحب أرضي ضيق بالدمبل أو الكابل (سيتيد رو)','منتصف الظهر وعضلات الترابيس','3 مجموعات × 12 تكراراً','90 ثانية','بقاء تكرار واحد في المفكرة (1 RIR)'],
+    ['سحب ذراع مستقيم بالكابل (ستريت آرم بول داون)','عزل عضلة المجنص (اللاتس)','3 مجموعات × 12 - 15 تكراراً','60 ثانية','الوصول للفشل في آخر مجموعة'],
+  ], tips:[] },
+  { group:'ذراعين', exercises:[
+    ['دفع ترايسبس بالكابل لأسفل (حبل)','الترايسبس (الرأس الجانبي والخارجي)','4 مجموعات × 10 - 12 تكراراً','90 ثانية','بقاء تكرارين (2 RIR)'],
+    ['تبادل بايسبس بالدمبل جالس','البايسبس (تكوير العضلة)','4 مجموعات × 10 - 12 تكراراً','90 ثانية','بقاء تكرارين (2 RIR)'],
+    ['تجميع ترايسبس بالدمبل خلف الرأس','الترايسبس (الرأس الطويل لزيادة الحجم)','3 مجموعات × 12 تكراراً','90 ثانية','بقاء تكرار واحد (1 RIR)'],
+    ['تبادل بايسبس شاكوش (هامر) بالدمبل','البايسبس وعضلة الساعد (البريكياليس)','3 مجموعات × 12 تكراراً','90 ثانية','بقاء تكرار واحد (1 RIR)'],
+    ['غطس ترايسبس على المقعد (بنش ديبس)','الترايسبس بالوزن الحر','3 مجموعات × حتى الفشل العضلي','60 ثانية','الفشل العضلي الفعلي'],
+    ['ارتكاز بايسبس على دكة الارتكاز (بريتشر كيرل)','عزل البايسبس السفلي','3 مجموعات × 12 - 15 تكراراً','60 ثانية',''],
+  ], tips:[] },
+];
+
+function trainerPlanRows(){
+  const rows = [];
+  let n = 0;
+  TRAINER_PLAN.forEach(g=>{
+    g.exercises.forEach(e=>{
+      rows.push({ group_name:g.group, kind:'exercise', name:e[0], target:e[1], sets_reps:e[2], rest:e[3], effort:e[4], sort_order:++n });
+    });
+    g.tips.forEach(t=>{
+      rows.push({ group_name:g.group, kind:'tip', name:t[0], notes:t[1], sort_order:++n });
+    });
+  });
+  return rows;
+}
+
+function renderFitnessPlan(wrap){
+  const title = document.createElement('div');
+  title.className = 'section-title';
+  title.textContent = 'خطة التمارين';
+  wrap.appendChild(title);
+
+  if(fitnessPlan.length === 0){
+    const hint = document.createElement('div');
+    hint.className = 'empty-hint';
+    hint.textContent = 'لسه ما فيش خطة. تقدر تحمّل خطة المدرب الجاهزة (كتف، صدر، ظهر، ذراعين) وتعدّل عليها بعد كده.';
+    wrap.appendChild(hint);
+    const loadBtn = document.createElement('button');
+    loadBtn.className = 'add-exp-btn';
+    loadBtn.style.cssText = 'width:100%;border:none;background:var(--ink);color:var(--paper);border-radius:8px;padding:10px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px;';
+    loadBtn.textContent = 'حمّل خطة المدرب';
+    loadBtn.onclick = async ()=>{
+      try{
+        const { data, error } = await sb.from('fitness_plan').insert(trainerPlanRows()).select();
+        if(error) throw error;
+        fitnessPlan = (data || []).sort((a,b)=> (a.sort_order||0) - (b.sort_order||0));
+        hideConnError(); showToast('اتحمّلت خطة المدرب ✓');
+      }catch(e){ showConnError('تعذر تحميل الخطة: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+      render();
+    };
+    wrap.appendChild(loadBtn);
+  }
+
+  // تجميع حسب المجموعة بترتيب الظهور
+  const groups = [];
+  fitnessPlan.forEach(r=>{ if(!groups.includes(r.group_name)) groups.push(r.group_name); });
+
+  groups.forEach(g=>{
+    const rows = fitnessPlan.filter(r=>r.group_name === g);
+    const exercises = rows.filter(r=>r.kind === 'exercise');
+    const tips = rows.filter(r=>r.kind === 'tip');
+
+    const det = document.createElement('details');
+    det.className = 'plan-group';
+    if(openPlanGroups.has(g)) det.open = true;
+    det.addEventListener('toggle', ()=>{ if(det.open) openPlanGroups.add(g); else openPlanGroups.delete(g); });
+
+    const sum = document.createElement('summary');
+    const gName = document.createElement('span'); gName.textContent = g;
+    const cnt = document.createElement('span'); cnt.className = 'cnt'; cnt.textContent = toArabicNum(exercises.length) + ' تمارين';
+    sum.appendChild(gName); sum.appendChild(cnt);
+    det.appendChild(sum);
+
+    const body = document.createElement('div');
+    body.className = 'plan-body';
+
+    exercises.forEach(ex=>{
+      const box = document.createElement('div');
+      box.className = 'plan-ex';
+      const top = document.createElement('div'); top.className = 'plan-ex-top';
+      const nm = document.createElement('div'); nm.className = 'plan-ex-name'; nm.textContent = ex.name;
+      top.appendChild(nm);
+      const del = confirmDeleteButton('✕', async ()=>{
+        try{
+          const { error } = await sb.from('fitness_plan').delete().eq('id', ex.id);
+          if(error) throw error;
+          fitnessPlan = fitnessPlan.filter(x=>x.id !== ex.id);
+          hideConnError(); showToast('اتحذف من الخطة');
+        }catch(e){ showConnError('تعذر الحذف: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+        render();
+      });
+      del.className = 'del';
+      top.appendChild(del);
+      box.appendChild(top);
+      if(ex.target){ const t = document.createElement('div'); t.className = 'plan-ex-target'; t.textContent = ex.target; box.appendChild(t); }
+      const meta = [];
+      if(ex.sets_reps) meta.push(ex.sets_reps);
+      if(ex.rest) meta.push('راحة: ' + ex.rest);
+      if(ex.effort) meta.push('الجهد: ' + ex.effort);
+      if(meta.length){ const m = document.createElement('div'); m.className = 'plan-ex-meta'; m.textContent = meta.join(' • '); box.appendChild(m); }
+      body.appendChild(box);
+    });
+
+    tips.forEach(tp=>{
+      const tb = document.createElement('div'); tb.className = 'plan-tip';
+      const tt = document.createElement('b'); tt.textContent = '🛠️ ' + tp.name;
+      const tx = document.createElement('span'); tx.textContent = tp.notes;
+      tb.appendChild(tt); tb.appendChild(tx);
+      body.appendChild(tb);
+    });
+
+    const logBtn = document.createElement('button');
+    logBtn.className = 'add-exp-btn';
+    logBtn.style.cssText = 'width:100%;border:none;background:var(--ink);color:var(--paper);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:10px;';
+    logBtn.textContent = 'خلّصت تمرين ' + g + ' النهاردة ✓';
+    logBtn.onclick = async ()=>{
+      try{
+        const { data, error } = await sb.from('fitness_logs').insert({
+          person_name: myName, kind:'workout', log_date: todayStr(), workout_type: 'جيم — ' + g
+        }).select().single();
+        if(error) throw error;
+        fitnessLogs.push(data);
+        hideConnError(); showToast('عاش! اتسجل تمرين ' + g + ' 💪');
+      }catch(e){ showConnError('تعذر تسجيل التمرين: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+      render();
+    };
+    body.appendChild(logBtn);
+
+    det.appendChild(body);
+    wrap.appendChild(det);
+  });
+
+  // إضافة تمرين يدوي
+  const addDet = document.createElement('details');
+  addDet.className = 'plan-group';
+  const addSum = document.createElement('summary');
+  addSum.textContent = '＋ إضافة تمرين لخطتي';
+  addDet.appendChild(addSum);
+  const addBody = document.createElement('div');
+  addBody.className = 'plan-body';
+  const form = document.createElement('div');
+  form.className = 'exp-form';
+  form.innerHTML = `
+    <div><label>المجموعة العضلية</label><input type="text" id="fpGroup" list="fpGroups" placeholder="مثلاً: رجل">
+      <datalist id="fpGroups">${groups.map(g=>`<option value="${g}"></option>`).join('')}</datalist></div>
+    <div><label>اسم التمرين</label><input type="text" id="fpName"></div>
+    <div class="full"><label>العضلة المستهدفة</label><input type="text" id="fpTarget" placeholder="اختياري"></div>
+    <div><label>مجموعات × تكرارات</label><input type="text" id="fpSets" placeholder="مثلاً 4 × 10"></div>
+    <div><label>فترة الراحة</label><input type="text" id="fpRest" placeholder="اختياري"></div>
+    <div class="full"><label>هدف الجهد</label><input type="text" id="fpEffort" placeholder="اختياري"></div>
+    <button class="add-exp-btn" id="fpAdd">أضف للخطة</button>
+  `;
+  addBody.appendChild(form);
+  addDet.appendChild(addBody);
+  wrap.appendChild(addDet);
+  form.querySelector('#fpAdd').onclick = async ()=>{
+    const group = form.querySelector('#fpGroup').value.trim();
+    const name = form.querySelector('#fpName').value.trim();
+    if(!group){ showToast('اكتب المجموعة العضلية'); return; }
+    if(!name){ showToast('اكتب اسم التمرين'); return; }
+    const maxSort = fitnessPlan.reduce((m,r)=> Math.max(m, r.sort_order||0), 0);
+    try{
+      const { data, error } = await sb.from('fitness_plan').insert({
+        group_name:group, kind:'exercise', name,
+        target: form.querySelector('#fpTarget').value.trim(),
+        sets_reps: form.querySelector('#fpSets').value.trim(),
+        rest: form.querySelector('#fpRest').value.trim(),
+        effort: form.querySelector('#fpEffort').value.trim(),
+        sort_order: maxSort + 1
+      }).select().single();
+      if(error) throw error;
+      fitnessPlan.push(data);
+      openPlanGroups.add(group);
+      hideConnError(); showToast('اتضاف للخطة ✓');
+    }catch(e){ showConnError('تعذر الإضافة: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+    render();
+  };
 }
 
 /* ---------------- FAMILY CHAT ---------------- */
