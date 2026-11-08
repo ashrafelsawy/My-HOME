@@ -244,6 +244,18 @@
   .plan-tip{ background:var(--paper-edge); border-radius:8px; padding:8px 10px; margin-top:8px; font-size:12px; line-height:1.7; }
   .plan-tip b{ display:block; margin-bottom:2px; }
 
+  .inst-edit-form{ display:none; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); }
+  .inst-edit-form .full{ grid-column:1 / -1; }
+  .inst-edit-form label{ font-size:11px; color:var(--ink-soft); display:block; margin-bottom:3px; }
+  .inst-edit-form input{
+    width:100%; border:1px solid var(--line); border-radius:6px; padding:7px 8px;
+    font-size:13px; font-family:inherit; background:#fff; color:var(--ink);
+  }
+  .inst-edit-form button{
+    grid-column:1 / -1; border:none; background:var(--ink); color:var(--paper);
+    border-radius:8px; padding:9px; font-size:13px; font-weight:600; cursor:pointer;
+  }
+
   .quick-actions{ display:flex; gap:10px; margin:4px 0 14px; }
   .quick-actions button{
     flex:1;
@@ -2008,7 +2020,8 @@ function renderInstallments(wrap){
     <div><label>قيمة القسط الشهري</label><input type="number" id="instAmount" placeholder="0"></div>
     <div><label>عدد الأقساط</label><input type="number" id="instCount" placeholder="مثلاً 24"></div>
     <div><label>تاريخ أول قسط</label><input type="date" id="instFirst" value="${todayStr()}"></div>
-    <div><label>ملاحظات</label><input type="text" id="instNotes" placeholder="اختياري"></div>
+    <div><label>اتدفع منهم كام؟</label><input type="number" id="instPaid" placeholder="0" value="0"></div>
+    <div class="full"><label>ملاحظات</label><input type="text" id="instNotes" placeholder="اختياري"></div>
     <button class="add-exp-btn" id="instAddBtn">إضافة قسط</button>
   `;
   wrap.appendChild(form);
@@ -2018,13 +2031,15 @@ function renderInstallments(wrap){
     const count = parseInt(form.querySelector('#instCount').value, 10);
     const first = form.querySelector('#instFirst').value;
     const notes = form.querySelector('#instNotes').value.trim();
+    const paidSoFar = parseInt(form.querySelector('#instPaid').value, 10) || 0;
     if(!name){ showToast('اكتب اسم القسط الأول'); return; }
     if(!amount || amount<=0){ showToast('اكتب قيمة القسط الشهري'); return; }
     if(!count || count<=0){ showToast('اكتب عدد الأقساط'); return; }
     if(!first){ showToast('اختار تاريخ أول قسط'); return; }
+    if(paidSoFar < 0 || paidSoFar > count){ showToast('عدد المدفوع لازم يبقى من صفر لحد عدد الأقساط'); return; }
     try{
       const { data, error } = await sb.from('installments').insert({
-        name, monthly_amount:amount, total_count:count, first_due:first, notes
+        name, monthly_amount:amount, total_count:count, first_due:first, paid_count:paidSoFar, notes
       }).select().single();
       if(error) throw error;
       installments.push(data);
@@ -2126,6 +2141,10 @@ function renderInstallments(wrap){
       undoBtn.onclick = ()=> setPaid(inst.paid_count - 1, 'اتلغت آخر دفعة');
       actions.appendChild(undoBtn);
     }
+    const editBtn = document.createElement('button');
+    editBtn.textContent = '✎ تعديل';
+    actions.appendChild(editBtn);
+
     const delBtn = document.createElement('button');
     delBtn.textContent = '✕ حذف';
     delBtn.dataset.confirming = '0';
@@ -2148,6 +2167,48 @@ function renderInstallments(wrap){
     };
     actions.appendChild(delBtn);
     card.appendChild(actions);
+
+    const editForm = document.createElement('div');
+    editForm.className = 'inst-edit-form';
+    editForm.innerHTML = `
+      <div class="full"><label>اسم القسط</label><input type="text" class="eName"></div>
+      <div><label>قيمة القسط الشهري</label><input type="number" class="eAmount"></div>
+      <div><label>عدد الأقساط</label><input type="number" class="eCount"></div>
+      <div><label>اتدفع منهم كام</label><input type="number" class="ePaid"></div>
+      <div><label>تاريخ أول قسط</label><input type="date" class="eFirst"></div>
+      <div class="full"><label>ملاحظات</label><input type="text" class="eNotes"></div>
+      <button class="eSave">حفظ التعديل</button>
+    `;
+    editForm.querySelector('.eName').value = inst.name || '';
+    editForm.querySelector('.eAmount').value = inst.monthly_amount;
+    editForm.querySelector('.eCount').value = inst.total_count;
+    editForm.querySelector('.ePaid').value = inst.paid_count;
+    editForm.querySelector('.eFirst').value = inst.first_due;
+    editForm.querySelector('.eNotes').value = inst.notes || '';
+    card.appendChild(editForm);
+    editBtn.onclick = ()=>{ editForm.style.display = editForm.style.display === 'grid' ? 'none' : 'grid'; };
+    editForm.querySelector('.eSave').onclick = async ()=>{
+      const name = editForm.querySelector('.eName').value.trim();
+      const amount = parseFloat(editForm.querySelector('.eAmount').value);
+      const count = parseInt(editForm.querySelector('.eCount').value, 10);
+      const paid = parseInt(editForm.querySelector('.ePaid').value, 10);
+      const first = editForm.querySelector('.eFirst').value;
+      const notes = editForm.querySelector('.eNotes').value.trim();
+      if(!name){ showToast('اكتب اسم القسط'); return; }
+      if(!amount || amount <= 0){ showToast('اكتب قيمة القسط الشهري'); return; }
+      if(!count || count <= 0){ showToast('اكتب عدد الأقساط'); return; }
+      if(isNaN(paid) || paid < 0 || paid > count){ showToast('عدد المدفوع لازم يبقى من صفر لحد عدد الأقساط'); return; }
+      if(!first){ showToast('اختار تاريخ أول قسط'); return; }
+      const patch = { name, monthly_amount:amount, total_count:count, paid_count:paid, first_due:first, notes };
+      try{
+        const { error } = await sb.from('installments').update(patch).eq('id', inst.id);
+        if(error) throw error;
+        Object.assign(inst, patch);
+        hideConnError();
+        showToast('اتحفظ التعديل ✓');
+      }catch(e){ showConnError('تعذر حفظ التعديل: ' + (e && e.message ? e.message : 'خطأ غير معروف')); }
+      render();
+    };
 
     wrap.appendChild(card);
   });
